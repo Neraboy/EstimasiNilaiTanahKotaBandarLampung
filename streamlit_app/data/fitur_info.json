@@ -1,0 +1,51 @@
+{
+  "NUM": [
+    "ln_luas",
+    "latitude",
+    "longitude",
+    "jarak_ke_transportasi",
+    "jarak_ke_pendidikan",
+    "jarak_ke_pemerintahan",
+    "jarak_ke_kolektor_sekunder",
+    "jarak_ke_kolektor_primer",
+    "jarak_ke_kesehatan",
+    "jarak_ke_CBD",
+    "jarak_ke_arteri_sekunder",
+    "jarak_ke_arteri_primer",
+    "banjir",
+    "longsor"
+  ],
+  "KAT": [
+    "jenis_hak",
+    "zonasi"
+  ],
+  "FITUR": [
+    "ln_luas",
+    "latitude",
+    "longitude",
+    "jarak_ke_transportasi",
+    "jarak_ke_pendidikan",
+    "jarak_ke_pemerintahan",
+    "jarak_ke_kolektor_sekunder",
+    "jarak_ke_kolektor_primer",
+    "jarak_ke_kesehatan",
+    "jarak_ke_CBD",
+    "jarak_ke_arteri_sekunder",
+    "jarak_ke_arteri_primer",
+    "banjir",
+    "longsor",
+    "jenis_hak",
+    "zonasi"
+  ],
+  "hp_final": {
+    "est__max_depth": 15,
+    "est__max_features": "sqrt",
+    "est__min_samples_leaf": 1,
+    "est__min_samples_split": 4,
+    "est__n_estimators": 258
+  },
+  "r2_in_sample_ln": 0.9245964924953582,
+  "r2_in_sample_rupiah": 0.8485699254885184,
+  "n_training": 196,
+  "catatan": "model_final direplikasi dari model_Random_Forest.py CELL 11, di-fit ke seluruh 196 data dengan hyperparameter hasil RandomizedSearchCV n_iter=64 yang sudah diperoleh sebelumnya di Colab."
+}
