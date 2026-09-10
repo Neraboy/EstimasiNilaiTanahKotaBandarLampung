@@ -20,49 +20,99 @@ DATA = os.path.join(BASE, "data")
 st.set_page_config(page_title="Kalkulator Indikasi Nilai Tanah - Bandar Lampung", layout="wide")
 
 # --- Gaya visual (lihat DESIGN.md): krem/kertas + cokelat tanah, kartu berbatas tipis
-# tanpa shadow tebal, tanpa gradient -- sengaja menghindari kesan "dashboard AI generik". ---
+# tanpa shadow tebal, tanpa gradient -- sengaja menghindari kesan "dashboard AI generik".
+# Mengikuti tema sistem (terang/gelap otomatis) lewat prefers-color-scheme, selaras dengan
+# [theme.light]/[theme.dark] di .streamlit/config.toml (lihat file itu untuk warna native
+# widget Streamlit -- CSS di sini hanya untuk elemen kustom kartu/label/bar).
+#
+# Font: judul & sub-judul pakai stack -apple-system (SF Pro asli di Mac/iPhone, Segoe UI
+# Bold sebagai fallback wajar di Windows -- SF Pro tidak bisa di-host sebagai file font
+# karena lisensinya dibatasi khusus platform Apple). Teks deskripsi pakai Gotham, di-host
+# sendiri lewat @font-face dari file berlisensi yang disediakan pengguna -- lihat
+# static/README.md di folder ini untuk cara menaruh filenya. Selama file itu belum ada,
+# browser otomatis jatuh ke fallback sans-serif tanpa error. ---
 st.markdown(
     """
     <style>
+    @font-face {
+        font-family: "Gotham";
+        src: url("app/static/fonts/Gotham-Book.woff2") format("woff2");
+        font-weight: 400; font-style: normal; font-display: swap;
+    }
+    @font-face {
+        font-family: "Gotham";
+        src: url("app/static/fonts/Gotham-Medium.woff2") format("woff2");
+        font-weight: 500; font-style: normal; font-display: swap;
+    }
+
     :root {
         --bg: #f6f3ee; --panel: #ffffff; --ink: #1f2420; --ink-soft: #5a6058;
         --border: #dcd7cc; --accent: #7a6a4f; --accent-dark: #5a4a2f;
         --positive: #3f7a4f; --negative: #a33f2b;
-        --warn-bg: #fdf1e8; --warn-border: #c97b2e;
+        --warn-bg: #fdf1e8; --warn-border: #c97b2e; --warn-ink: #7a4413;
+        --faktor-track: #efece4;
+        --font-header: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        --font-body: "Gotham", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        /* Skala spacing 8px (lihat DESIGN.md -- prinsip diadaptasi dari disiplin spacing Nike) */
+        --sp-xxs: 2px; --sp-xs: 4px; --sp-sm: 8px; --sp-md: 16px; --sp-lg: 24px;
+        --sp-xl: 32px; --sp-section: 48px;
     }
+    @media (prefers-color-scheme: dark) {
+        :root {
+            --bg: #1c1a16; --panel: #262219; --ink: #ece7db; --ink-soft: #b7ac97;
+            --border: #453e30; --accent: #c9a877; --accent-dark: #dab98a;
+            --positive: #6fbf7f; --negative: #e07a5f;
+            --warn-bg: #3a2c1c; --warn-border: #c97b2e; --warn-ink: #f0c896;
+            --faktor-track: #332e24;
+        }
+    }
+
     .stApp { background: var(--bg); }
-    h1, h2, h3 { color: var(--ink) !important; font-weight: 650 !important; }
-    .block-container { padding-top: 2rem; }
+    body, p, span, div, label, li { font-family: var(--font-body); }
+    /* Kontras tipografi 3 tingkat: header > sub-header (.label-kecil) > body -- tidak ada
+       tingkat perantara, lihat DESIGN.md bagian Typography. */
+    h1, h2, h3 {
+        color: var(--ink) !important; font-family: var(--font-header) !important;
+        font-weight: 700 !important;
+    }
+    .block-container { padding-top: var(--sp-xl); }
 
     .kartu {
         background: var(--panel); border: 1px solid var(--border); border-radius: 10px;
-        padding: 20px 22px; margin-bottom: 16px;
+        padding: var(--sp-md) var(--sp-lg); margin-bottom: var(--sp-md);
     }
     .label-kecil {
-        font-size: 12px; font-weight: 650; letter-spacing: .3px; text-transform: uppercase;
-        color: var(--ink-soft); margin-bottom: 6px;
+        font-family: var(--font-header); font-size: 12px; font-weight: 500; letter-spacing: .3px;
+        text-transform: uppercase; color: var(--ink-soft); margin-bottom: var(--sp-xs);
     }
     .peringatan-disclaimer {
         background: var(--warn-bg); border: 1px solid var(--warn-border); border-radius: 10px;
-        padding: 14px 18px; color: #7a4413; font-size: 14px; line-height: 1.55;
+        padding: var(--sp-sm) var(--sp-md); color: var(--warn-ink); font-size: 14px; line-height: 1.55;
     }
-    .hasil-angka { font-size: 30px; font-weight: 700; color: var(--accent-dark); margin: 2px 0; }
+    .hasil-angka { font-size: 30px; font-weight: 700; color: var(--accent-dark); margin: var(--sp-xxs) 0; }
     .hasil-sub { font-size: 12.5px; color: var(--ink-soft); }
 
-    .faktor-baris { display: flex; align-items: center; gap: 10px; margin: 8px 0; font-size: 13.5px; }
+    .faktor-baris {
+        display: flex; align-items: center; gap: var(--sp-sm); margin: var(--sp-xs) 0; font-size: 13.5px;
+    }
     .faktor-nama { width: 230px; flex: none; color: var(--ink); }
-    .faktor-bar-wrap { flex: 1; background: #efece4; border-radius: 4px; height: 18px; position: relative; }
+    .faktor-bar-wrap { flex: 1; background: var(--faktor-track); border-radius: 4px; height: 18px; position: relative; }
     .faktor-bar { height: 18px; border-radius: 4px; }
     .faktor-nilai { width: 130px; flex: none; text-align: right; font-weight: 600; font-size: 13px; }
 
+    /* Satu kosakata bentuk tombol saja (sudut membulat kecil, bukan pil) -- status default,
+       hover, dan ditekan didefinisikan terpisah dan eksplisit, lihat DESIGN.md komponen
+       button-primary / button-primary-pressed. */
     div.stButton > button[kind="primary"] {
         background: var(--accent-dark); border: none; border-radius: 6px; color: #fff;
+        font-family: var(--font-header); transition: filter 0.1s ease;
     }
-    div.stButton > button[kind="primary"]:hover { background: #46381f; }
+    div.stButton > button[kind="primary"]:hover { filter: brightness(0.94); }
+    div.stButton > button[kind="primary"]:active { filter: brightness(0.85); }
 
     [data-testid="stMetric"] {
         background: var(--panel); border: 1px solid var(--border); border-radius: 10px;
-        padding: 14px 16px;
+        padding: var(--sp-sm) var(--sp-md);
     }
     </style>
     """,
