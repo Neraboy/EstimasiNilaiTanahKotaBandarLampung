@@ -91,7 +91,26 @@ with col_form:
 
 with col_map:
     st.subheader("Peta referensi kecamatan")
-    m = folium.Map(location=[-5.4295, 105.2625], zoom_start=12, tiles="cartodbpositron")
+    try:
+        CARTO_KEY = st.secrets.get("CARTO_API_KEY", "")
+    except Exception:
+        CARTO_KEY = ""
+    tile_url = "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
+    if CARTO_KEY:
+        tile_url += f"?key={CARTO_KEY}"
+    else:
+        st.caption(
+            "Peta dasar belum diberi API key CARTO, jadi bisa muncul watermark "
+            "\"API KEY REQUIRED\". Tambahkan CARTO_API_KEY di Settings > Secrets "
+            "aplikasi Streamlit Cloud."
+        )
+    m = folium.Map(location=[-5.4295, 105.2625], zoom_start=12, tiles=None)
+    folium.TileLayer(
+        tiles=tile_url,
+        attr='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+        subdomains="abcd",
+        max_zoom=19,
+    ).add_to(m)
     folium.GeoJson(
         zona_geojson,
         name="Kecamatan",
