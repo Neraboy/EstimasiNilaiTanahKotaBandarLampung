@@ -77,13 +77,17 @@ st.markdown(
     }
     .block-container { padding-top: var(--sp-xl); }
 
-    .kartu {
-        background: var(--panel); border: 1px solid var(--border); border-radius: 10px;
-        padding: var(--sp-md) var(--sp-lg); margin-bottom: var(--sp-md);
+    /* Kartu sungguhan lewat st.container(border=True, key="kartu_...") -- bukan div HTML
+       yang dibuka/ditutup lewat st.markdown terpisah (itu TIDAK benar-benar membungkus
+       widget Streamlit di antaranya, hanya membuat kotak kosong). Selector attribute
+       [class*=] menjangkau semua key yang diawali "kartu" sekaligus. */
+    div[class*="st-key-kartu"] {
+        background: var(--panel) !important; border: 1px solid var(--border) !important;
+        border-radius: 10px !important;
     }
     .label-kecil {
-        font-family: var(--font-header); font-size: 12px; font-weight: 500; letter-spacing: .3px;
-        text-transform: uppercase; color: var(--ink-soft); margin-bottom: var(--sp-xs);
+        font-family: var(--font-header); font-size: 12.5px; font-weight: 700; letter-spacing: .4px;
+        text-transform: uppercase; color: var(--ink); margin-bottom: var(--sp-xs);
     }
     .peringatan-disclaimer {
         background: var(--warn-bg); border: 1px solid var(--warn-border); border-radius: 10px;
@@ -91,7 +95,13 @@ st.markdown(
     }
     .hasil-angka { font-size: 30px; font-weight: 700; color: var(--accent-dark); margin: var(--sp-xxs) 0; }
     .hasil-sub { font-size: 12.5px; color: var(--ink-soft); }
+    .hasil-dasar {
+        font-size: 13.5px; color: var(--ink-soft); padding: var(--sp-sm) 0 var(--sp-md) 0;
+        border-bottom: 1px solid var(--border); margin-bottom: var(--sp-sm);
+    }
 
+    /* Semua bar faktor mulai rata kiri -- arah naik/turun dibedakan HANYA lewat warna,
+       bukan lewat sisi mana bar itu mulai (lebih mudah dibaca sebagai satu barisan). */
     .faktor-baris {
         display: flex; align-items: center; gap: var(--sp-sm); margin: var(--sp-xs) 0; font-size: 13.5px;
     }
@@ -99,6 +109,12 @@ st.markdown(
     .faktor-bar-wrap { flex: 1; background: var(--faktor-track); border-radius: 4px; height: 18px; position: relative; }
     .faktor-bar { height: 18px; border-radius: 4px; }
     .faktor-nilai { width: 130px; flex: none; text-align: right; font-weight: 600; font-size: 13px; }
+
+    /* Peta referensi kecamatan (iframe streamlit-folium) -- sudut dibuat membulat
+       konsisten dengan kartu lain, bukan kotak siku bawaan iframe. */
+    iframe[title="streamlit_folium.st_folium"] {
+        border-radius: 10px; overflow: hidden; border: 1px solid var(--border);
+    }
 
     /* Satu kosakata bentuk tombol saja (sudut membulat kecil, bukan pil) -- status default,
        hover, dan ditekan didefinisikan terpisah dan eksplisit, lihat DESIGN.md komponen
@@ -207,25 +223,23 @@ st.write("")
 col_form, col_map = st.columns([1, 1.3])
 
 with col_form:
-    st.markdown('<div class="kartu">', unsafe_allow_html=True)
-    st.markdown('<div class="label-kecil">1. Data bidang</div>', unsafe_allow_html=True)
-    luas = st.number_input(
-        "Luas tanah (m²)", min_value=1, max_value=100000, value=170, step=1,
-        help=f"Rentang data latih model: {RENTANG_LATIH['luas'][0]:,} - {RENTANG_LATIH['luas'][1]:,} m². "
-             "Di luar rentang ini, model melakukan ekstrapolasi dan hasilnya kurang bisa diandalkan.",
-    )
-    jenis_hak = st.selectbox("Jenis hak", ["SHM", "SHGB"])
-    zonasi = st.selectbox("Zonasi (RTRW)", ["Permukiman", "NonPermukiman"])
-    banjir = st.radio("Riwayat rawan banjir di lokasi ini?", ["Tidak", "Ya"], horizontal=True)
-    longsor = st.radio("Riwayat rawan longsor di lokasi ini?", ["Tidak", "Ya"], horizontal=True)
-    st.markdown("</div>", unsafe_allow_html=True)
+    with st.container(border=True, key="kartu_data_bidang"):
+        st.markdown('<div class="label-kecil">1. Data bidang</div>', unsafe_allow_html=True)
+        luas = st.number_input(
+            "Luas tanah (m²)", min_value=1, max_value=100000, value=170, step=1,
+            help=f"Rentang data latih model: {RENTANG_LATIH['luas'][0]:,} - {RENTANG_LATIH['luas'][1]:,} m². "
+                 "Di luar rentang ini, model melakukan ekstrapolasi dan hasilnya kurang bisa diandalkan.",
+        )
+        jenis_hak = st.selectbox("Jenis hak", ["SHM", "SHGB"])
+        zonasi = st.selectbox("Zonasi (RTRW)", ["Permukiman", "NonPermukiman"])
+        banjir = st.radio("Riwayat rawan banjir di lokasi ini?", ["Tidak", "Ya"], horizontal=True)
+        longsor = st.radio("Riwayat rawan longsor di lokasi ini?", ["Tidak", "Ya"], horizontal=True)
 
-    st.markdown('<div class="kartu">', unsafe_allow_html=True)
-    st.markdown('<div class="label-kecil">2. Lokasi bidang</div>', unsafe_allow_html=True)
-    st.caption("Klik peta di sebelah kanan untuk menandai lokasi, atau isi koordinat manual di bawah.")
-    lat_manual = st.number_input("Lintang (latitude)", value=-5.4295, format="%.6f")
-    lon_manual = st.number_input("Bujur (longitude)", value=105.2625, format="%.6f")
-    st.markdown("</div>", unsafe_allow_html=True)
+    with st.container(border=True, key="kartu_lokasi_bidang"):
+        st.markdown('<div class="label-kecil">2. Lokasi bidang</div>', unsafe_allow_html=True)
+        st.caption("Klik peta di sebelah kanan untuk menandai lokasi, atau isi koordinat manual di bawah.")
+        lat_manual = st.number_input("Lintang (latitude)", value=-5.4295, format="%.6f")
+        lon_manual = st.number_input("Bujur (longitude)", value=105.2625, format="%.6f")
 
 with col_map:
     st.markdown('<div class="label-kecil">Peta referensi kecamatan</div>', unsafe_allow_html=True)
@@ -294,12 +308,11 @@ if hitung:
     pred_per_m2 = float(np.exp(pred_ln))
     pred_total = pred_per_m2 * luas
 
-    st.markdown('<div class="kartu">', unsafe_allow_html=True)
-    st.markdown('<div class="label-kecil">Hasil</div>', unsafe_allow_html=True)
-    c1, c2 = st.columns(2)
-    c1.metric("Indikasi awal nilai per m²", f"Rp{pred_per_m2:,.0f}")
-    c2.metric("Indikasi awal total bidang", f"Rp{pred_total:,.0f}")
-    st.markdown("</div>", unsafe_allow_html=True)
+    with st.container(border=True, key="kartu_hasil"):
+        st.markdown('<div class="label-kecil">Hasil</div>', unsafe_allow_html=True)
+        c1, c2 = st.columns(2)
+        c1.metric("Indikasi awal nilai per m²", f"Rp{pred_per_m2:,.0f}")
+        c2.metric("Indikasi awal total bidang", f"Rp{pred_total:,.0f}")
 
     # --- Peringatan ekstrapolasi ---
     peringatan = []
@@ -334,6 +347,13 @@ if hitung:
     nama_teknis = list(pra.get_feature_names_out())
     shap_values = explainer.shap_values(est_input)[0]
 
+    # Nilai dasar model (expected_value, skala ln) -> rupiah/m2. Ini titik awal sebelum
+    # faktor-faktor di bawah menambah/mengurangi, bukan cuma daftar faktor lepas tanpa acuan.
+    base_ln = explainer.expected_value
+    if hasattr(base_ln, "__len__"):
+        base_ln = base_ln[0]
+    base_per_m2 = float(np.exp(base_ln))
+
     kontribusi = []
     for nama, sv in zip(nama_teknis, shap_values):
         rp = pred_per_m2 * (np.exp(sv) - 1)  # aproksimasi lokal, lihat catatan di bawah
@@ -342,59 +362,63 @@ if hitung:
     top = kontribusi[:6]
     maks_abs = max(abs(v) for _, v in top) or 1.0
 
-    st.markdown('<div class="kartu">', unsafe_allow_html=True)
-    st.markdown('<div class="label-kecil">Faktor yang paling memengaruhi angka ini</div>', unsafe_allow_html=True)
-    st.caption(
-        "Menunjukkan enam faktor dengan pengaruh terbesar terhadap indikasi nilai per m² di atas, "
-        "dalam perkiraan rupiah, bukan grafik teknis. Hijau menaikkan nilai, merah menurunkan."
-    )
-    for nama, rp in top:
-        warna = "var(--positive)" if rp >= 0 else "var(--negative)"
-        lebar = max(6, abs(rp) / maks_abs * 100)
-        tanda = "+" if rp >= 0 else "-"
-        sisi = "margin-left:auto;" if rp >= 0 else ""
+    with st.container(border=True, key="kartu_faktor"):
+        st.markdown('<div class="label-kecil">Faktor yang paling memengaruhi angka ini</div>', unsafe_allow_html=True)
+        st.caption(
+            "Menunjukkan enam faktor dengan pengaruh terbesar terhadap indikasi nilai per m² di atas, "
+            "dalam perkiraan rupiah, bukan grafik teknis. Hijau menaikkan nilai, merah menurunkan."
+        )
         st.markdown(
-            f"""
-            <div class="faktor-baris">
-              <div class="faktor-nama">{nama}</div>
-              <div class="faktor-bar-wrap">
-                <div class="faktor-bar" style="width:{lebar:.0f}%; background:{warna}; {sisi}"></div>
-              </div>
-              <div class="faktor-nilai" style="color:{warna};">{tanda} Rp{abs(rp):,.0f}</div>
-            </div>
-            """,
+            f'<div class="hasil-dasar">Nilai dasar model (rata-rata bidang sejenis di data latih): '
+            f'<b>Rp{base_per_m2:,.0f} / m²</b> &rarr; disesuaikan oleh faktor-faktor di bawah &rarr; '
+            f'hasil akhir <b>Rp{pred_per_m2:,.0f} / m²</b></div>',
             unsafe_allow_html=True,
         )
-    st.caption(
-        "Angka rupiah di atas perkiraan pengaruh tiap faktor secara lokal untuk bidang ini saja "
-        "(bukan aturan umum berlaku sama untuk semua bidang), dan jumlah totalnya tidak dijamin "
-        "pas sama dengan indikasi nilai akhir karena model dilatih pada skala logaritmik."
-    )
-    st.markdown("</div>", unsafe_allow_html=True)
+        for nama, rp in top:
+            warna = "var(--positive)" if rp >= 0 else "var(--negative)"
+            lebar = max(6, abs(rp) / maks_abs * 100)
+            tanda = "+" if rp >= 0 else "-"
+            st.markdown(
+                f"""
+                <div class="faktor-baris">
+                  <div class="faktor-nama">{nama}</div>
+                  <div class="faktor-bar-wrap">
+                    <div class="faktor-bar" style="width:{lebar:.0f}%; background:{warna};"></div>
+                  </div>
+                  <div class="faktor-nilai" style="color:{warna};">{tanda} Rp{abs(rp):,.0f}</div>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+        st.caption(
+            "Angka rupiah di atas perkiraan pengaruh tiap faktor secara lokal untuk bidang ini saja "
+            "(bukan aturan umum berlaku sama untuk semua bidang), dihitung mulai dari nilai dasar model "
+            "di atas -- jumlah totalnya tidak dijamin pas sama dengan indikasi nilai akhir karena model "
+            "dilatih pada skala logaritmik."
+        )
 
     # --- Rujukan nilai tengah kecamatan ---
     kecamatan_lokasi = titik["kecamatan"]
     baris_kec = kec_nir[kec_nir["kecamatan"] == kecamatan_lokasi]
     if len(baris_kec):
         b = baris_kec.iloc[0]
-        st.markdown('<div class="kartu">', unsafe_allow_html=True)
-        st.markdown(f'<div class="label-kecil">Rujukan: kecamatan {kecamatan_lokasi}</div>', unsafe_allow_html=True)
-        st.write(
-            f"Nilai tengah kecamatan ini (dari kerja zonasi purwarupa, "
-            f"dasar: {'transaksi riil' if b['dasar']=='transaksi' else 'estimasi model, data tipis'}, "
-            f"n = {int(b['n_tx'])} transaksi): **Rp{b['nir']:,.0f} / m²**"
-        )
-        if b["dasar"] != "transaksi":
-            st.caption(
-                "Kecamatan ini datanya tipis (kurang dari 3 transaksi riil), jadi rujukan di atas "
-                "juga berbasis estimasi model, bukan transaksi riil."
+        with st.container(border=True, key="kartu_rujukan_kecamatan"):
+            st.markdown(f'<div class="label-kecil">Rujukan: kecamatan {kecamatan_lokasi}</div>', unsafe_allow_html=True)
+            st.write(
+                f"Nilai tengah kecamatan ini (dari kerja zonasi purwarupa, "
+                f"dasar: {'transaksi riil' if b['dasar']=='transaksi' else 'estimasi model, data tipis'}, "
+                f"n = {int(b['n_tx'])} transaksi): **Rp{b['nir']:,.0f} / m²**"
             )
-        st.caption(
-            "Rujukan ini konteks pembanding tingkat kecamatan, bukan validasi bahwa indikasi per bidang "
-            "di atas benar. Menetapkan ZNT dan NIR resmi dari kumpulan indikasi per bidang seperti ini "
-            "adalah proses tersendiri yang jadi kewenangan dan pekerjaan BPPRD."
-        )
-        st.markdown("</div>", unsafe_allow_html=True)
+            if b["dasar"] != "transaksi":
+                st.caption(
+                    "Kecamatan ini datanya tipis (kurang dari 3 transaksi riil), jadi rujukan di atas "
+                    "juga berbasis estimasi model, bukan transaksi riil."
+                )
+            st.caption(
+                "Rujukan ini konteks pembanding tingkat kecamatan, bukan validasi bahwa indikasi per bidang "
+                "di atas benar. Menetapkan ZNT dan NIR resmi dari kumpulan indikasi per bidang seperti ini "
+                "adalah proses tersendiri yang jadi kewenangan dan pekerjaan BPPRD."
+            )
 
 st.write("")
 with st.expander("Keterbatasan yang perlu diketahui sebelum memakai angka ini"):
