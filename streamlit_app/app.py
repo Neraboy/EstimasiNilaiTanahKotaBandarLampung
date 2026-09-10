@@ -61,7 +61,7 @@ RENTANG_LATIH = {
 }
 
 st.title("Kalkulator Indikasi Awal Nilai Tanah")
-st.caption("Purwarupa skripsi -- Kota Bandar Lampung -- Model Random Forest")
+st.caption("Purwarupa skripsi | Kota Bandar Lampung | Model Random Forest")
 
 st.warning(
     "**Ini BUKAN alat penetapan NJOP, ZNT, atau NIR resmi.** Angka yang keluar dari "
