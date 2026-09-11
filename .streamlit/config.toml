@@ -2,15 +2,15 @@
 enableStaticServing = true
 
 [theme.light]
-primaryColor = "#5a4a2f"
-backgroundColor = "#f6f3ee"
+primaryColor = "#10233f"
+backgroundColor = "#f4f4f0"
 secondaryBackgroundColor = "#ffffff"
-textColor = "#1f2420"
+textColor = "#10233f"
 font = "sans serif"
 
 [theme.dark]
-primaryColor = "#dab98a"
-backgroundColor = "#1c1a16"
-secondaryBackgroundColor = "#262219"
-textColor = "#ece7db"
+primaryColor = "#c9a227"
+backgroundColor = "#071c38"
+secondaryBackgroundColor = "#10284d"
+textColor = "#f2f0e6"
 font = "sans serif"
