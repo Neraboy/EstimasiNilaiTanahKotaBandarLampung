@@ -30,7 +30,7 @@ st.markdown(
     """
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;800&family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
     <style>
     :root {
         --bg: #f4f4f0; --panel: #ffffff; --ink: #10233f; --ink-soft: #55627d;
@@ -39,7 +39,7 @@ st.markdown(
         --warn-bg: #fbf1da; --warn-border: #b8912f; --warn-ink: #6b4e08;
         --faktor-track: #ecebe4;
         --font-header: "Nunito", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-        --font-body: "Poppins", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        --font-body: "Nunito", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
         --sp-xxs: 2px; --sp-xs: 4px; --sp-sm: 8px; --sp-md: 16px; --sp-lg: 24px;
         --sp-xl: 32px; --sp-section: 48px;
         --tex-opacity: 1;
@@ -209,9 +209,26 @@ with col_form:
 
     with st.container(border=True, key="kartu_lokasi_bidang"):
         st.markdown('<div class="label-kecil">3. Lokasi bidang</div>', unsafe_allow_html=True)
-        st.caption("Klik peta di sebelah kanan untuk menandai lokasi, atau isi koordinat manual di bawah.")
-        lat_manual = st.number_input("Lintang (latitude)", value=-5.4295, format="%.6f")
-        lon_manual = st.number_input("Bujur (longitude)", value=105.2625, format="%.6f")
+        sumber_lokasi = st.radio(
+            "Sumber koordinat",
+            ["Klik peta", "Input manual"],
+            horizontal=True,
+            help="Pilih salah satu. Kalau \"Klik peta\" dipilih, angka lintang/bujur di bawah "
+                 "diabaikan dan lokasi dari titik yang kamu klik di peta yang dipakai -- begitu "
+                 "juga sebaliknya, supaya tidak tertukar antara dua sumber koordinat.",
+        )
+        lat_input = st.number_input(
+            "Lintang (latitude)", value=-5.4295, format="%.6f",
+            disabled=(sumber_lokasi == "Klik peta"),
+            help="Posisi utara-selatan di bumi, dalam derajat desimal. Nilai negatif berarti "
+                 "di belahan bumi selatan (Bandar Lampung sekitar -5,4 derajat).",
+        )
+        lon_input = st.number_input(
+            "Bujur (longitude)", value=105.2625, format="%.6f",
+            disabled=(sumber_lokasi == "Klik peta"),
+            help="Posisi barat-timur di bumi, dalam derajat desimal. Bandar Lampung sekitar "
+                 "105,2 derajat (di sebelah timur garis 0 derajat yang melewati Greenwich).",
+        )
 
 with col_map:
     st.markdown('<div class="label-kecil">Peta referensi kecamatan</div>', unsafe_allow_html=True)
@@ -228,6 +245,9 @@ with col_map:
             '"API KEY REQUIRED". Tambahkan CARTO_API_KEY di Settings > Secrets '
             "aplikasi Streamlit Cloud."
         )
+    if "titik_klik_peta" not in st.session_state:
+        st.session_state["titik_klik_peta"] = None
+
     m = folium.Map(location=[-5.4295, 105.2625], zoom_start=12, tiles=None)
     folium.TileLayer(
         tiles=tile_url,
@@ -246,12 +266,31 @@ with col_map:
         },
         tooltip=folium.GeoJsonTooltip(fields=["kecamatan"], aliases=["Kecamatan:"]),
     ).add_to(m)
+    if st.session_state["titik_klik_peta"]:
+        folium.Marker(
+            location=st.session_state["titik_klik_peta"],
+            icon=folium.Icon(color="red", icon="map-pin", prefix="fa"),
+        ).add_to(m)
     map_state = st_folium(m, height=430, width=None, key="peta_lokasi")
 
     if map_state and map_state.get("last_clicked"):
-        lat_manual = map_state["last_clicked"]["lat"]
-        lon_manual = map_state["last_clicked"]["lng"]
-        st.caption(f"Lokasi dari klik peta: {lat_manual:.6f}, {lon_manual:.6f}")
+        titik_baru = (map_state["last_clicked"]["lat"], map_state["last_clicked"]["lng"])
+        if titik_baru != st.session_state["titik_klik_peta"]:
+            st.session_state["titik_klik_peta"] = titik_baru
+            st.rerun()
+
+    if st.session_state["titik_klik_peta"]:
+        st.caption(
+            f"Lokasi dari klik peta: {st.session_state['titik_klik_peta'][0]:.6f}, "
+            f"{st.session_state['titik_klik_peta'][1]:.6f}"
+        )
+    elif sumber_lokasi == "Klik peta":
+        st.caption("Belum ada titik yang diklik di peta.")
+
+if sumber_lokasi == "Klik peta" and st.session_state["titik_klik_peta"]:
+    lat_manual, lon_manual = st.session_state["titik_klik_peta"]
+else:
+    lat_manual, lon_manual = lat_input, lon_input
 
 st.write("")
 hitung = st.button("Hitung indikasi nilai", type="primary", use_container_width=True)
@@ -396,17 +435,47 @@ st.write("")
 with st.expander("Keterbatasan yang perlu diketahui sebelum memakai angka ini"):
     st.markdown(
         """
-- Model diuji dengan cross-validation dan menghasilkan **COD 34,38-39,00** per bidang,
-  gagal memenuhi ambang praktik terbaik IAAO (COD 5-20 untuk kategori tanah kosong).
-  PMK 85/2024 sendiri tidak menetapkan ambang COD/PRD/PRB, jadi ini bukan pelanggaran
-  regulasi, tapi tetap keterbatasan akurasi yang nyata dan harus disadari pemakai.
-- MAPE model berkisar 43-49% tergantung skema pengujian. Untuk satu bidang spesifik,
-  simpangan indikasi dari nilai pasar sebenarnya bisa cukup besar.
+**Seberapa akurat model ini secara umum (202 bidang, 5-fold cross-validation):**
+- R² skala logaritmik (skala tempat model dilatih): **0,4828**. R² skala rupiah
+  (skala uang sebenarnya): **0,1662** -- jauh lebih rendah karena lima bidang saja dari
+  202 menyumbang 73,7% dari total kuadrat error, jadi beberapa bidang ekstrem membuat
+  R² skala rupiah terlihat lebih buruk daripada R² skala log.
+- MAPE 49,7%, median APE 31,7%. Artinya untuk bidang biasa (bukan yang ekstrem),
+  simpangan indikasi dari harga sebenarnya biasanya sekitar sepertiga, tapi bisa jauh
+  lebih besar untuk bidang yang tidak biasa.
+- Korelasi peringkat (Spearman) 0,7037 -- model cukup baik membedakan "lebih mahal"
+  vs "lebih murah" antar bidang, walau angka rupiah presisnya sendiri tidak bisa
+  diandalkan penuh.
+- **Bukan cuma teori: kalau kamu coba masukkan data bidang yang PERSIS dipakai untuk
+  melatih model, angka yang keluar dari kalkulator ini TIDAK akan sama persis dengan
+  harga transaksi aslinya** -- itu bukan bug, itu karena Random Forest tidak menghafal
+  data latihnya satu-satu (supaya tidak overfitting), dan error individual sebesar
+  angka MAPE di atas memang bisa terjadi pada bidang mana pun, termasuk yang ada di
+  data latih.
+
+**Uji IAAO (tingkat keseragaman penilaian, bukan cuma tingkat rata-rata):**
+- COD (Coefficient of Dispersion) per bidang: **36,92**, gagal ambang praktik terbaik
+  IAAO 5-20 untuk tanah kosong. Pada level 20 zona NIR: COD **29,95**. Sebagai
+  pembanding, NIR dari harga transaksi aktual (skenario zonasi sempurna tanpa model
+  sama sekali) COD-nya **25,03** -- jadi sebagian dispersi ini melekat pada data
+  transaksinya sendiri, bukan murni kesalahan model.
+- **PRD (Price Related Differential, ambang IAAO 0,98-1,03) dan PRB (Price Related
+  Bias, ambang IAAO -0,05 sampai 0,05) belum dihitung untuk model 202 bidang versi
+  ini.** Dua metrik ini perlu dihitung dari prediksi out-of-fold, bukan dari
+  menjalankan model pada data yang sama yang dipakai melatihnya (itu akan bias dan
+  tidak sah), jadi angkanya sengaja tidak ditampilkan di sini sebelum benar-benar
+  dihitung dengan cara yang sah.
+- PMK 85/2024 sendiri tidak menetapkan ambang COD/PRD/PRB -- jadi gagal ambang ini
+  bukan pelanggaran regulasi Indonesia, tapi tetap keterbatasan akurasi praktik
+  terbaik internasional yang nyata dan harus disadari pemakai.
+
+**Keterbatasan lain:**
 - Fitur jarak jaringan jalan pada kalkulator ini dipinjam dari titik grid prediksi
   terdekat (grid 500 meter), bukan dihitung ulang presisi untuk lokasi persis yang
-  ditandai.
+  ditandai -- makin jauh titik yang kamu tandai dari titik grid terdekat, makin kasar
+  aproksimasinya.
 - Random Forest tidak bisa diandalkan untuk memprediksi kombinasi input yang jauh di
-  luar rentang data 196 bidang yang dipakai melatihnya.
+  luar rentang data 202 bidang yang dipakai melatihnya.
 - Faktor penentu nilai di atas adalah aproksimasi SHAP yang dikonversi dari skala
   logaritmik ke rupiah untuk kemudahan baca, bukan dekomposisi rupiah yang presisi.
         """
