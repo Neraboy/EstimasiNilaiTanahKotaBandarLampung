@@ -42,7 +42,7 @@ st.markdown(
         --font-body: "Poppins", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
         --sp-xxs: 2px; --sp-xs: 4px; --sp-sm: 8px; --sp-md: 16px; --sp-lg: 24px;
         --sp-xl: 32px; --sp-section: 48px;
-        --tex-opacity: 0.05;
+        --tex-opacity: 1;
     }
     @media (prefers-color-scheme: dark) {
         :root {
@@ -51,7 +51,7 @@ st.markdown(
             --positive: #4fbf82; --negative: #e2604a;
             --warn-bg: #2c2410; --warn-border: #c9a227; --warn-ink: #f0d998;
             --faktor-track: #1e1e1e;
-            --tex-opacity: 0.08;
+            --tex-opacity: 1;
         }
     }
     .stApp {
