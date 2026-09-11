@@ -46,11 +46,11 @@ st.markdown(
     }
     @media (prefers-color-scheme: dark) {
         :root {
-            --bg: #071c38; --panel: #10284d; --ink: #f2f0e6; --ink-soft: #a7b2c6;
-            --border: #27436d; --gold: #e8cf6b; --btn-bg: #c9a227; --btn-text: #10233f;
+            --bg: #000000; --panel: #141414; --ink: #f2f0e6; --ink-soft: #a8a8a8;
+            --border: #2c2c2c; --gold: #e8cf6b; --btn-bg: #c9a227; --btn-text: #10233f;
             --positive: #4fbf82; --negative: #e2604a;
             --warn-bg: #2c2410; --warn-border: #c9a227; --warn-ink: #f0d998;
-            --faktor-track: #16305a;
+            --faktor-track: #1e1e1e;
             --tex-opacity: 0.08;
         }
     }
@@ -202,20 +202,23 @@ st.write("")
 col_form, col_map = st.columns([1, 1.3])
 
 with col_form:
-    with st.container(border=True, key="kartu_data_bidang"):
-        st.markdown('<div class="label-kecil">1. Data bidang</div>', unsafe_allow_html=True)
+    with st.container(border=True, key="kartu_luas_bidang"):
+        st.markdown('<div class="label-kecil">1. Luas bidang</div>', unsafe_allow_html=True)
         luas = st.number_input(
             "Luas tanah (m²)", min_value=1, max_value=100000, value=170, step=1,
             help=f"Rentang data latih model: {RENTANG_LATIH['luas'][0]:,} - {RENTANG_LATIH['luas'][1]:,} m². "
                  "Di luar rentang ini, model melakukan ekstrapolasi dan hasilnya kurang bisa diandalkan.",
         )
+
+    with st.container(border=True, key="kartu_data_bidang"):
+        st.markdown('<div class="label-kecil">2. Data bidang lainnya</div>', unsafe_allow_html=True)
         jenis_hak = st.selectbox("Jenis hak", ["SHM", "SHGB"])
         zonasi = st.selectbox("Zonasi (RTRW)", ["Permukiman", "NonPermukiman"])
         banjir = st.radio("Riwayat rawan banjir di lokasi ini?", ["Tidak", "Ya"], horizontal=True)
         longsor = st.radio("Riwayat rawan longsor di lokasi ini?", ["Tidak", "Ya"], horizontal=True)
 
     with st.container(border=True, key="kartu_lokasi_bidang"):
-        st.markdown('<div class="label-kecil">2. Lokasi bidang</div>', unsafe_allow_html=True)
+        st.markdown('<div class="label-kecil">3. Lokasi bidang</div>', unsafe_allow_html=True)
         st.caption("Klik peta di sebelah kanan untuk menandai lokasi, atau isi koordinat manual di bawah.")
         lat_manual = st.number_input("Lintang (latitude)", value=-5.4295, format="%.6f")
         lon_manual = st.number_input("Bujur (longitude)", value=105.2625, format="%.6f")
