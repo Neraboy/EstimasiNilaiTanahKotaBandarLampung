@@ -37,20 +37,20 @@ colors:
 
 typography:
   header:
-    fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif"
+    fontFamily: "'Nunito', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif"
     fontSize: 22px
     fontWeight: 700
     lineHeight: 1.3
     use: Judul halaman (st.title) -- satu-satunya elemen di tingkat ini, seperti "billboard" kecil di atas seluruh form
   sub-header:
-    fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif"
+    fontFamily: "'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif"
     fontSize: 12.5px
-    fontWeight: 700
+    fontWeight: 600
     letterSpacing: 0.4px
     textTransform: uppercase
     use: Label kartu/bagian ("1. Data bidang", "Hasil", "Faktor yang paling memengaruhi angka ini")
   body:
-    fontFamily: "Gotham, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif"
+    fontFamily: "'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif"
     fontSize: 14px
     fontWeight: 400
     lineHeight: 1.55
@@ -171,10 +171,18 @@ kartu/bagian, gaya dokumen formulir resmi), dan `body` (14px, line-height lega, 
 untuk semua isi). Tidak ada tingkat perantara -- lompatan tegas dari judul ke label kecil
 ke isi ini yang membuat halaman terasa terstruktur tanpa perlu banyak ukuran font.
 
-Font header/sub-header pakai stack sistem native (`-apple-system` dst., SF Pro asli di
-perangkat Apple, Segoe UI di Windows). Font isi (`body`) pakai Gotham yang di-host sendiri
-dari file berlisensi (lihat `static/README.md`), jatuh ke stack sistem native bila file
-belum tersedia.
+Font judul pakai Nunito (Bold), semua yang lain -- label kartu/bagian, tombol, dan
+seluruh teks isi -- pakai Poppins, dimuat lewat Google Fonts CDN langsung di `app.py`
+(bukan file lokal). Keduanya font open-license (SIL OFL), boleh disebarluaskan bebas
+lewat repo publik. SF Pro dan Gotham sempat dipertimbangkan tapi sengaja TIDAK dipakai:
+metadata file SF Pro yang beredar menyebut lisensinya terikat "iOS Software License
+Agreement" milik Apple sendiri (tidak untuk web di luar platform Apple), dan bundel
+Gotham yang sempat diberikan berisi Gotham, Gotham Rounded, dan Gotham Narrow lengkap
+semua bobot dalam satu folder -- pola khas font bajakan, bukan pembelian lisensi
+webfont resmi dari Hoefler & Frere-Jones. Menaruh file semacam itu di repo GitHub
+publik berarti menyebarluaskan font berhak cipta tanpa izin, jadi keduanya tidak
+dipakai; fallback ke stack sistem native (`-apple-system`, Segoe UI) tetap aktif bila
+Google Fonts gagal dimuat.
 
 ## Layout
 

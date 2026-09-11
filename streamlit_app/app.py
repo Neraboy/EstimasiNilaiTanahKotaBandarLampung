@@ -19,45 +19,27 @@ DATA = os.path.join(BASE, "data")
 
 st.set_page_config(page_title="Kalkulator Indikasi Nilai Tanah - Bandar Lampung", layout="wide")
 
-# --- Gaya visual (lihat DESIGN.md): krem/kertas + cokelat tanah, kartu berbatas tipis
-# tanpa shadow tebal, tanpa gradient -- sengaja menghindari kesan "dashboard AI generik".
-# Mengikuti tema sistem (terang/gelap otomatis) lewat prefers-color-scheme, selaras dengan
-# [theme.light]/[theme.dark] di .streamlit/config.toml (lihat file itu untuk warna native
-# widget Streamlit -- CSS di sini hanya untuk elemen kustom kartu/label/bar).
-#
-# Font: judul & sub-judul pakai stack -apple-system (SF Pro asli di Mac/iPhone, Segoe UI
-# Bold sebagai fallback wajar di Windows -- SF Pro tidak bisa di-host sebagai file font
-# karena lisensinya dibatasi khusus platform Apple). Teks deskripsi pakai Gotham, di-host
-# sendiri lewat @font-face dari file berlisensi yang disediakan pengguna -- lihat
-# static/README.md di folder ini untuk cara menaruh filenya. Selama file itu belum ada,
-# browser otomatis jatuh ke fallback sans-serif tanpa error. ---
+# --- Gaya visual, lihat DESIGN.md untuk penjelasan lengkap palet, tipografi, dan alasan
+# penolakan SF Pro/Gotham (lisensi). PENTING: st.markdown menjalankan parser markdown
+# lebih dulu sebelum unsafe_allow_html menyisipkan HTML mentahnya, jadi blok <style> di
+# bawah ini SENGAJA tidak diberi komentar CSS prosa (terutama yang memuat tanda hubung
+# ganda atau tanda bintang tunggal seperti selektor "*"): markdown mengubah "--" jadi en
+# dash dan bisa memakan tanda bintang sebagai penanda italic, yang pernah membuat sisa
+# CSS di bawahnya ikut terpotong/hilang saat dirender. Semua penjelasan ada di DESIGN.md.
 st.markdown(
     """
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;800&family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
-    @font-face {
-        font-family: "Gotham";
-        src: url("app/static/fonts/Gotham-Book.woff2") format("woff2");
-        font-weight: 400; font-style: normal; font-display: swap;
-    }
-    @font-face {
-        font-family: "Gotham";
-        src: url("app/static/fonts/Gotham-Medium.woff2") format("woff2");
-        font-weight: 500; font-style: normal; font-display: swap;
-    }
-
-    /* Palet navy + emas diambil dari identitas PKN STAN (warnanya saja, bukan gambar slide
-       judulnya -- lihat DESIGN.md bagian Overview untuk alasannya). Tombol utama sengaja
-       membalik pasangan navy/emas per mode lewat --btn-bg/--btn-text, bukan cuma satu
-       warna aksen terisolasi. */
     :root {
         --bg: #f4f4f0; --panel: #ffffff; --ink: #10233f; --ink-soft: #55627d;
         --border: #d7dbe3; --gold: #8a6d16; --btn-bg: #10233f; --btn-text: #f4f4f0;
         --positive: #2f7d5c; --negative: #b23a2c;
         --warn-bg: #fbf1da; --warn-border: #b8912f; --warn-ink: #6b4e08;
         --faktor-track: #ecebe4;
-        --font-header: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-        --font-body: "Gotham", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-        /* Skala spacing 8px (lihat DESIGN.md -- prinsip diadaptasi dari disiplin spacing Nike) */
+        --font-header: "Nunito", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        --font-body: "Poppins", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
         --sp-xxs: 2px; --sp-xs: 4px; --sp-sm: 8px; --sp-md: 16px; --sp-lg: 24px;
         --sp-xl: 32px; --sp-section: 48px;
         --tex-opacity: 0.05;
@@ -72,40 +54,28 @@ st.markdown(
             --tex-opacity: 0.08;
         }
     }
-
     .stApp {
         background: var(--bg);
         position: relative;
     }
-    /* Tekstur grunge tipis buatan sendiri (noise + goresan, bukan gambar berhak cipta) --
-       hanya di lapisan latar paling belakang, opacity sangat rendah, lihat DESIGN.md
-       bagian Texture. */
     .stApp::before {
-        content: ""; position: fixed; inset: 0; z-index: 0; pointer-events: none;
+        content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
         background-image: url("app/static/textures/grunge.png");
         background-repeat: repeat; background-size: 512px 512px;
         opacity: var(--tex-opacity); mix-blend-mode: overlay;
     }
-    .stApp > * { position: relative; z-index: 1; }
     body, p, span, div, label, li { font-family: var(--font-body); }
-    /* Kontras tipografi 3 tingkat: header > sub-header (.label-kecil) > body -- tidak ada
-       tingkat perantara, lihat DESIGN.md bagian Typography. */
     h1, h2, h3 {
         color: var(--ink) !important; font-family: var(--font-header) !important;
         font-weight: 700 !important;
     }
     .block-container { padding-top: var(--sp-xl); }
-
-    /* Kartu sungguhan lewat st.container(border=True, key="kartu_...") -- bukan div HTML
-       yang dibuka/ditutup lewat st.markdown terpisah (itu TIDAK benar-benar membungkus
-       widget Streamlit di antaranya, hanya membuat kotak kosong). Selector attribute
-       [class*=] menjangkau semua key yang diawali "kartu" sekaligus. */
     div[class*="st-key-kartu"] {
         background: var(--panel) !important; border: 1px solid var(--border) !important;
         border-radius: 10px !important;
     }
     .label-kecil {
-        font-family: var(--font-header); font-size: 12.5px; font-weight: 700; letter-spacing: .4px;
+        font-family: var(--font-body); font-size: 12.5px; font-weight: 600; letter-spacing: .4px;
         text-transform: uppercase; color: var(--ink); margin-bottom: var(--sp-xs);
     }
     .peringatan-disclaimer {
@@ -118,9 +88,6 @@ st.markdown(
         font-size: 13.5px; color: var(--ink-soft); padding: var(--sp-sm) 0 var(--sp-md) 0;
         border-bottom: 1px solid var(--border); margin-bottom: var(--sp-sm);
     }
-
-    /* Semua bar faktor mulai rata kiri -- arah naik/turun dibedakan HANYA lewat warna,
-       bukan lewat sisi mana bar itu mulai (lebih mudah dibaca sebagai satu barisan). */
     .faktor-baris {
         display: flex; align-items: center; gap: var(--sp-sm); margin: var(--sp-xs) 0; font-size: 13.5px;
     }
@@ -128,28 +95,19 @@ st.markdown(
     .faktor-bar-wrap { flex: 1; background: var(--faktor-track); border-radius: 4px; height: 18px; position: relative; }
     .faktor-bar { height: 18px; border-radius: 4px; }
     .faktor-nilai { width: 130px; flex: none; text-align: right; font-weight: 600; font-size: 13px; }
-
-    /* Peta referensi kecamatan (iframe streamlit-folium) -- sudut dibuat membulat
-       konsisten dengan kartu lain, bukan kotak siku bawaan iframe. */
     iframe[title="streamlit_folium.st_folium"] {
         border-radius: 10px; overflow: hidden; border: 1px solid var(--border);
     }
-
-    /* Satu kosakata bentuk tombol saja (sudut membulat kecil, bukan pil) -- status default,
-       hover, dan ditekan didefinisikan terpisah dan eksplisit, lihat DESIGN.md komponen
-       button-primary / button-primary-pressed. */
     div.stButton > button[kind="primary"] {
         background: var(--btn-bg); border: none; border-radius: 6px; color: var(--btn-text);
-        font-family: var(--font-header); transition: filter 0.1s ease;
+        font-family: var(--font-body); font-weight: 600; transition: filter 0.1s ease;
     }
     div.stButton > button[kind="primary"]:hover { filter: brightness(0.94); }
     div.stButton > button[kind="primary"]:active { filter: brightness(0.85); }
-
     [data-testid="stMetric"] {
         background: var(--panel); border: 1px solid var(--border); border-radius: 10px;
         padding: var(--sp-sm) var(--sp-md);
     }
-    /* Angka hasil kalkulasi ditonjolkan dengan warna emas -- lihat DESIGN.md komponen. */
     [data-testid="stMetricValue"] { color: var(--gold) !important; }
     </style>
     """,
