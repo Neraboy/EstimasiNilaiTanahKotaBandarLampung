@@ -440,6 +440,10 @@ with st.expander("Keterbatasan yang perlu diketahui sebelum memakai angka ini"):
 - R² skala logaritmik: **0,4828**. R² skala rupiah: **0,1662** -- lima bidang saja dari
   196 menyumbang 73,7% dari total kuadrat error pada skala rupiah.
 - MAPE 49,7%, median APE 31,7%.
+- R² in-sample (model diuji pada data yang sama dipakai melatihnya): skala ln **0,9246**,
+  skala rupiah **0,8486**. Angka ini bukan ukuran validitas, model mana pun gampang
+  cocok dengan data yang sudah dilihatnya. Ukuran yang valid untuk menilai kegunaan
+  tetap R² dan IAAO hasil cross-validation di atas.
 
 **Uji IAAO, 5-fold CV (situasi interpolasi):**
 - COD **34,38** (ambang 5-20)
