@@ -55,14 +55,14 @@ st.markdown(
         }
     }
     .stApp {
-        background: var(--bg);
+        background: var(--bg) !important;
         position: relative;
     }
     .stApp::before {
         content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
         background-image: url("app/static/textures/grunge.png");
         background-repeat: repeat; background-size: 512px 512px;
-        opacity: var(--tex-opacity); mix-blend-mode: overlay;
+        opacity: var(--tex-opacity);
     }
     body, p, span, div, label, li { font-family: var(--font-body); }
     h1, h2, h3 {
