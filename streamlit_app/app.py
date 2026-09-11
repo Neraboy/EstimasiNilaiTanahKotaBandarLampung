@@ -436,14 +436,30 @@ st.write("")
 with st.expander("Keterbatasan yang perlu diketahui sebelum memakai angka ini"):
     st.markdown(
         """
-**Seberapa akurat model ini secara umum (196 bidang, 5-fold cross-validation):**
-- R² skala logaritmik: **0,4828**. R² skala rupiah: **0,1662** -- lima bidang saja dari
-  196 menyumbang 73,7% dari total kuadrat error pada skala rupiah.
-- MAPE 49,7%, median APE 31,7%.
-- R² in-sample (model diuji pada data yang sama dipakai melatihnya): skala ln **0,9246**,
-  skala rupiah **0,8486**. Angka ini bukan ukuran validitas, model mana pun gampang
-  cocok dengan data yang sudah dilihatnya. Ukuran yang valid untuk menilai kegunaan
-  tetap R² dan IAAO hasil cross-validation di atas.
+**Apa arti R², RMSE, dan MAPE:**
+- R² mengukur seberapa representatif model menjelaskan variasi harga tanah, dari 0
+  sampai 1. Makin dekat ke 1, makin banyak variasi harga yang berhasil dijelaskan model.
+- RMSE (Root Mean Square Error) adalah rata-rata simpangan prediksi terhadap harga
+  sebenarnya, dalam rupiah per m², dengan bobot lebih berat untuk simpangan yang besar.
+- MAPE (Mean Absolute Percentage Error) adalah rata-rata simpangan prediksi terhadap
+  harga sebenarnya, dalam persen, tanpa bobot ekstra untuk simpangan besar.
+
+**Hasil 5-fold cross-validation (196 bidang, situasi interpolasi, banyak titik transaksi
+di sekitar):**
+- R² skala ln **0,5114**, skala rupiah **0,4161**
+- RMSE **Rp563.931/m²**
+- MAPE **43,07%**
+
+**Hasil spatial block cross-validation per kecamatan (situasi ekstrapolasi, lebih relevan
+untuk purwarupa karena zona bertransaksi tipis mengandalkan ZNT tetangga):**
+- R² skala ln **0,3659**, skala rupiah **0,1364**
+- RMSE **Rp691.171/m²**
+- MAPE **49,19%**
+
+- R² in-sample (model diuji pada data yang sama dipakai melatihnya): menunggu konfirmasi
+  dari Colab. Angka ini bukan ukuran validitas, model mana pun gampang cocok dengan data
+  yang sudah dilihatnya. Ukuran yang valid untuk menilai kegunaan tetap R², RMSE, dan MAPE
+  hasil cross-validation di atas.
 
 **Uji IAAO, 5-fold CV (situasi interpolasi):**
 - COD **34,38** (ambang 5-20)
