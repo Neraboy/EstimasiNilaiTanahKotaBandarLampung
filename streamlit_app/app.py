@@ -45,29 +45,48 @@ st.markdown(
         font-weight: 500; font-style: normal; font-display: swap;
     }
 
+    /* Palet navy + emas diambil dari identitas PKN STAN (warnanya saja, bukan gambar slide
+       judulnya -- lihat DESIGN.md bagian Overview untuk alasannya). Tombol utama sengaja
+       membalik pasangan navy/emas per mode lewat --btn-bg/--btn-text, bukan cuma satu
+       warna aksen terisolasi. */
     :root {
-        --bg: #f6f3ee; --panel: #ffffff; --ink: #1f2420; --ink-soft: #5a6058;
-        --border: #dcd7cc; --accent: #7a6a4f; --accent-dark: #5a4a2f;
-        --positive: #3f7a4f; --negative: #a33f2b;
-        --warn-bg: #fdf1e8; --warn-border: #c97b2e; --warn-ink: #7a4413;
-        --faktor-track: #efece4;
+        --bg: #f4f4f0; --panel: #ffffff; --ink: #10233f; --ink-soft: #55627d;
+        --border: #d7dbe3; --gold: #8a6d16; --btn-bg: #10233f; --btn-text: #f4f4f0;
+        --positive: #2f7d5c; --negative: #b23a2c;
+        --warn-bg: #fbf1da; --warn-border: #b8912f; --warn-ink: #6b4e08;
+        --faktor-track: #ecebe4;
         --font-header: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
         --font-body: "Gotham", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
         /* Skala spacing 8px (lihat DESIGN.md -- prinsip diadaptasi dari disiplin spacing Nike) */
         --sp-xxs: 2px; --sp-xs: 4px; --sp-sm: 8px; --sp-md: 16px; --sp-lg: 24px;
         --sp-xl: 32px; --sp-section: 48px;
+        --tex-opacity: 0.05;
     }
     @media (prefers-color-scheme: dark) {
         :root {
-            --bg: #1c1a16; --panel: #262219; --ink: #ece7db; --ink-soft: #b7ac97;
-            --border: #453e30; --accent: #c9a877; --accent-dark: #dab98a;
-            --positive: #6fbf7f; --negative: #e07a5f;
-            --warn-bg: #3a2c1c; --warn-border: #c97b2e; --warn-ink: #f0c896;
-            --faktor-track: #332e24;
+            --bg: #071c38; --panel: #10284d; --ink: #f2f0e6; --ink-soft: #a7b2c6;
+            --border: #27436d; --gold: #e8cf6b; --btn-bg: #c9a227; --btn-text: #10233f;
+            --positive: #4fbf82; --negative: #e2604a;
+            --warn-bg: #2c2410; --warn-border: #c9a227; --warn-ink: #f0d998;
+            --faktor-track: #16305a;
+            --tex-opacity: 0.08;
         }
     }
 
-    .stApp { background: var(--bg); }
+    .stApp {
+        background: var(--bg);
+        position: relative;
+    }
+    /* Tekstur grunge tipis buatan sendiri (noise + goresan, bukan gambar berhak cipta) --
+       hanya di lapisan latar paling belakang, opacity sangat rendah, lihat DESIGN.md
+       bagian Texture. */
+    .stApp::before {
+        content: ""; position: fixed; inset: 0; z-index: 0; pointer-events: none;
+        background-image: url("app/static/textures/grunge.png");
+        background-repeat: repeat; background-size: 512px 512px;
+        opacity: var(--tex-opacity); mix-blend-mode: overlay;
+    }
+    .stApp > * { position: relative; z-index: 1; }
     body, p, span, div, label, li { font-family: var(--font-body); }
     /* Kontras tipografi 3 tingkat: header > sub-header (.label-kecil) > body -- tidak ada
        tingkat perantara, lihat DESIGN.md bagian Typography. */
@@ -93,7 +112,7 @@ st.markdown(
         background: var(--warn-bg); border: 1px solid var(--warn-border); border-radius: 10px;
         padding: var(--sp-sm) var(--sp-md); color: var(--warn-ink); font-size: 14px; line-height: 1.55;
     }
-    .hasil-angka { font-size: 30px; font-weight: 700; color: var(--accent-dark); margin: var(--sp-xxs) 0; }
+    .hasil-angka { font-size: 30px; font-weight: 700; color: var(--gold); margin: var(--sp-xxs) 0; }
     .hasil-sub { font-size: 12.5px; color: var(--ink-soft); }
     .hasil-dasar {
         font-size: 13.5px; color: var(--ink-soft); padding: var(--sp-sm) 0 var(--sp-md) 0;
@@ -120,7 +139,7 @@ st.markdown(
        hover, dan ditekan didefinisikan terpisah dan eksplisit, lihat DESIGN.md komponen
        button-primary / button-primary-pressed. */
     div.stButton > button[kind="primary"] {
-        background: var(--accent-dark); border: none; border-radius: 6px; color: #fff;
+        background: var(--btn-bg); border: none; border-radius: 6px; color: var(--btn-text);
         font-family: var(--font-header); transition: filter 0.1s ease;
     }
     div.stButton > button[kind="primary"]:hover { filter: brightness(0.94); }
@@ -130,6 +149,8 @@ st.markdown(
         background: var(--panel); border: 1px solid var(--border); border-radius: 10px;
         padding: var(--sp-sm) var(--sp-md);
     }
+    /* Angka hasil kalkulasi ditonjolkan dengan warna emas -- lihat DESIGN.md komponen. */
+    [data-testid="stMetricValue"] { color: var(--gold) !important; }
     </style>
     """,
     unsafe_allow_html=True,
