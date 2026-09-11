@@ -149,6 +149,22 @@ JARAK_COLS = [
     "jarak_ke_kolektor_sekunder", "jarak_ke_kolektor_primer", "jarak_ke_kesehatan",
     "jarak_ke_CBD", "jarak_ke_arteri_sekunder", "jarak_ke_arteri_primer",
 ]
+# MAPE hasil spatial block cross-validation (situasi ekstrapolasi), dipakai sebagai
+# lebar rentang indikasi nilai. Bukan selang kepercayaan statistik formal, cuma
+# perkiraan kasar dari rata-rata simpangan persen model saat diuji pada kecamatan
+# yang tidak pernah dilihatnya. Lihat Status_Skripsi.md Bagian 4.1.
+MAPE_SPATIAL = 0.4919
+
+
+def warna_gradien_data(n_transaksi, n_maks=15):
+    """Merah (data pembanding sedikit) ke hijau (data pembanding banyak), dibatasi n_maks."""
+    lo = (178, 58, 44)
+    hi = (47, 125, 92)
+    t = min(n_transaksi / n_maks, 1.0)
+    r = round(lo[0] + (hi[0] - lo[0]) * t)
+    g = round(lo[1] + (hi[1] - lo[1]) * t)
+    b = round(lo[2] + (hi[2] - lo[2]) * t)
+    return f"#{r:02x}{g:02x}{b:02x}"
 
 # Rentang data latih, untuk peringatan ekstrapolasi (lihat expander di bagian bawah halaman)
 RENTANG_LATIH = {
@@ -236,6 +252,11 @@ with col_form:
 
 with col_map:
     st.markdown('<div class="label-kecil">Peta referensi kecamatan</div>', unsafe_allow_html=True)
+    st.caption(
+        "Warna zona menunjukkan jumlah transaksi pembanding, bukan tinggi rendahnya harga. "
+        "Makin hijau, makin banyak data pembanding dan makin bisa diandalkan. Makin merah, "
+        "makin sedikit data pembanding dan indikasi nilainya makin berpotensi meleset jauh."
+    )
     try:
         CARTO_KEY = st.secrets.get("CARTO_API_KEY", "")
     except Exception:
@@ -263,12 +284,15 @@ with col_map:
         zona_geojson,
         name="Kecamatan",
         style_function=lambda f: {
-            "fillColor": "#efa761" if not f["properties"].get("peringatan_data_tipis") else "#fdf1e8",
+            "fillColor": warna_gradien_data(f["properties"].get("n_transaksi", 0)),
             "color": "#5a4a2f",
             "weight": 1,
-            "fillOpacity": 0.35,
+            "fillOpacity": 0.55,
         },
-        tooltip=folium.GeoJsonTooltip(fields=["kecamatan"], aliases=["Kecamatan:"]),
+        tooltip=folium.GeoJsonTooltip(
+            fields=["kecamatan", "n_transaksi"],
+            aliases=["Kecamatan:", "Jumlah transaksi pembanding:"],
+        ),
     ).add_to(m)
     if st.session_state["titik_klik_peta"]:
         folium.Marker(
@@ -323,11 +347,28 @@ if hitung:
     pred_per_m2 = float(np.exp(pred_ln))
     pred_total = pred_per_m2 * luas
 
+    batas_bawah_m2 = pred_per_m2 * (1 - MAPE_SPATIAL)
+    batas_atas_m2 = pred_per_m2 * (1 + MAPE_SPATIAL)
+    batas_bawah_total = batas_bawah_m2 * luas
+    batas_atas_total = batas_atas_m2 * luas
+
     with st.container(border=True, key="kartu_hasil"):
         st.markdown('<div class="label-kecil">Hasil</div>', unsafe_allow_html=True)
         c1, c2 = st.columns(2)
         c1.metric("Indikasi awal nilai per m²", f"Rp{pred_per_m2:,.0f}")
         c2.metric("Indikasi awal total bidang", f"Rp{pred_total:,.0f}")
+        st.markdown(
+            f'<div class="hasil-sub" style="margin-top:8px;">Rentang per m²: '
+            f"Rp{batas_bawah_m2:,.0f} sampai Rp{batas_atas_m2:,.0f}</div>"
+            f'<div class="hasil-sub">Rentang total bidang: '
+            f"Rp{batas_bawah_total:,.0f} sampai Rp{batas_atas_total:,.0f}</div>",
+            unsafe_allow_html=True,
+        )
+        st.caption(
+            "Rentang ini dari MAPE hasil spatial block cross-validation (49,19%), bukan "
+            "selang kepercayaan statistik formal. Anggap sebagai perkiraan kasar seberapa "
+            "jauh indikasi di atas bisa meleset dari harga sebenarnya."
+        )
 
     # --- Peringatan ekstrapolasi ---
     peringatan = []
@@ -421,14 +462,14 @@ if hitung:
         with st.container(border=True, key=kelas_kartu):
             st.markdown(f'<div class="label-kecil">Rujukan: kecamatan {kecamatan_lokasi}</div>', unsafe_allow_html=True)
             st.write(
-                f"Nilai tengah kecamatan ini (dari kerja zonasi purwarupa, "
-                f"dasar: {'transaksi riil' if b['dasar']=='transaksi' else 'estimasi model, data tipis'}, "
+                f"Nilai tengah kecamatan ini "
+                f"(dasar: {'transaksi riil' if b['dasar']=='transaksi' else 'estimasi model, data tipis'}, "
                 f"n = {int(b['n_tx'])} transaksi): **Rp{b['nir']:,.0f} / m²**"
             )
             if b["dasar"] != "transaksi":
                 st.markdown(
-                    '<div class="peringatan-disclaimer">Kecamatan ini datanya tipis (kurang dari 3 transaksi riil), '
-                    "jadi rujukan di atas juga berbasis estimasi model, bukan transaksi riil.</div>",
+                    '<div class="peringatan-disclaimer">Akurasi rujukan ini lebih rendah karena keterbatasan '
+                    "data pembanding di kecamatan ini.</div>",
                     unsafe_allow_html=True,
                 )
 
