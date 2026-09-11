@@ -64,6 +64,10 @@ st.markdown(
         background: var(--panel) !important; border: 1px solid var(--border) !important;
         border-radius: 10px !important;
     }
+    div[class*="st-key-kartu_rujukan_kecamatan_bahaya"] {
+        background: var(--warn-bg) !important; border: 1px solid var(--warn-border) !important;
+        border-radius: 10px !important;
+    }
     .label-kecil {
         font-family: var(--font-body); font-size: 12.5px; font-weight: 600; letter-spacing: .4px;
         text-transform: uppercase; color: var(--ink); margin-bottom: var(--sp-xs);
@@ -413,7 +417,8 @@ if hitung:
     baris_kec = kec_nir[kec_nir["kecamatan"] == kecamatan_lokasi]
     if len(baris_kec):
         b = baris_kec.iloc[0]
-        with st.container(border=True, key="kartu_rujukan_kecamatan"):
+        kelas_kartu = "kartu_rujukan_kecamatan" if b["dasar"] == "transaksi" else "kartu_rujukan_kecamatan_bahaya"
+        with st.container(border=True, key=kelas_kartu):
             st.markdown(f'<div class="label-kecil">Rujukan: kecamatan {kecamatan_lokasi}</div>', unsafe_allow_html=True)
             st.write(
                 f"Nilai tengah kecamatan ini (dari kerja zonasi purwarupa, "
@@ -421,61 +426,40 @@ if hitung:
                 f"n = {int(b['n_tx'])} transaksi): **Rp{b['nir']:,.0f} / m²**"
             )
             if b["dasar"] != "transaksi":
-                st.caption(
-                    "Kecamatan ini datanya tipis (kurang dari 3 transaksi riil), jadi rujukan di atas "
-                    "juga berbasis estimasi model, bukan transaksi riil."
+                st.markdown(
+                    '<div class="peringatan-disclaimer">Kecamatan ini datanya tipis (kurang dari 3 transaksi riil), '
+                    "jadi rujukan di atas juga berbasis estimasi model, bukan transaksi riil.</div>",
+                    unsafe_allow_html=True,
                 )
-            st.caption(
-                "Rujukan ini konteks pembanding tingkat kecamatan, bukan validasi bahwa indikasi per bidang "
-                "di atas benar. Menetapkan ZNT dan NIR resmi dari kumpulan indikasi per bidang seperti ini "
-                "adalah proses tersendiri yang jadi kewenangan dan pekerjaan BPPRD."
-            )
 
 st.write("")
 with st.expander("Keterbatasan yang perlu diketahui sebelum memakai angka ini"):
     st.markdown(
         """
-**Seberapa akurat model ini secara umum (202 bidang, 5-fold cross-validation):**
-- R² skala logaritmik (skala tempat model dilatih): **0,4828**. R² skala rupiah
-  (skala uang sebenarnya): **0,1662** -- jauh lebih rendah karena lima bidang saja dari
-  202 menyumbang 73,7% dari total kuadrat error, jadi beberapa bidang ekstrem membuat
-  R² skala rupiah terlihat lebih buruk daripada R² skala log.
-- MAPE 49,7%, median APE 31,7%. Artinya untuk bidang biasa (bukan yang ekstrem),
-  simpangan indikasi dari harga sebenarnya biasanya sekitar sepertiga, tapi bisa jauh
-  lebih besar untuk bidang yang tidak biasa.
-- Korelasi peringkat (Spearman) 0,7037 -- model cukup baik membedakan "lebih mahal"
-  vs "lebih murah" antar bidang, walau angka rupiah presisnya sendiri tidak bisa
-  diandalkan penuh.
-- **Bukan cuma teori: kalau kamu coba masukkan data bidang yang PERSIS dipakai untuk
-  melatih model, angka yang keluar dari kalkulator ini TIDAK akan sama persis dengan
-  harga transaksi aslinya** -- itu bukan bug, itu karena Random Forest tidak menghafal
-  data latihnya satu-satu (supaya tidak overfitting), dan error individual sebesar
-  angka MAPE di atas memang bisa terjadi pada bidang mana pun, termasuk yang ada di
-  data latih.
+**Seberapa akurat model ini secara umum (196 bidang, 5-fold cross-validation):**
+- R² skala logaritmik: **0,4828**. R² skala rupiah: **0,1662** -- lima bidang saja dari
+  196 menyumbang 73,7% dari total kuadrat error pada skala rupiah.
+- MAPE 49,7%, median APE 31,7%.
 
-**Uji IAAO (tingkat keseragaman penilaian, bukan cuma tingkat rata-rata):**
-- COD (Coefficient of Dispersion) per bidang: **36,92**, gagal ambang praktik terbaik
-  IAAO 5-20 untuk tanah kosong. Pada level 20 zona NIR: COD **29,95**. Sebagai
-  pembanding, NIR dari harga transaksi aktual (skenario zonasi sempurna tanpa model
-  sama sekali) COD-nya **25,03** -- jadi sebagian dispersi ini melekat pada data
-  transaksinya sendiri, bukan murni kesalahan model.
-- **PRD (Price Related Differential, ambang IAAO 0,98-1,03) dan PRB (Price Related
-  Bias, ambang IAAO -0,05 sampai 0,05) belum dihitung untuk model 202 bidang versi
-  ini.** Dua metrik ini perlu dihitung dari prediksi out-of-fold, bukan dari
-  menjalankan model pada data yang sama yang dipakai melatihnya (itu akan bias dan
-  tidak sah), jadi angkanya sengaja tidak ditampilkan di sini sebelum benar-benar
-  dihitung dengan cara yang sah.
-- PMK 85/2024 sendiri tidak menetapkan ambang COD/PRD/PRB -- jadi gagal ambang ini
-  bukan pelanggaran regulasi Indonesia, tapi tetap keterbatasan akurasi praktik
-  terbaik internasional yang nyata dan harus disadari pemakai.
+**Uji IAAO, 5-fold CV (situasi interpolasi):**
+- COD **34,38** (ambang 5-20)
+- PRD **1,2068** (ambang 0,98-1,03)
+- PRB **-0,1813** (ambang -0,05 s.d. 0,05)
+- Ketiganya gagal ambang.
+
+**Uji IAAO, spatial block CV per kecamatan (situasi ekstrapolasi, lebih relevan untuk
+purwarupa karena zona bertransaksi tipis mengandalkan ZNT tetangga):**
+- COD **39,00** (ambang 5-20)
+- PRD **1,3383** (ambang 0,98-1,03)
+- PRB **-0,4448** (ambang -0,05 s.d. 0,05)
+- Ketiganya gagal ambang.
 
 **Keterbatasan lain:**
 - Fitur jarak jaringan jalan pada kalkulator ini dipinjam dari titik grid prediksi
   terdekat (grid 500 meter), bukan dihitung ulang presisi untuk lokasi persis yang
-  ditandai -- makin jauh titik yang kamu tandai dari titik grid terdekat, makin kasar
-  aproksimasinya.
+  ditandai.
 - Random Forest tidak bisa diandalkan untuk memprediksi kombinasi input yang jauh di
-  luar rentang data 202 bidang yang dipakai melatihnya.
+  luar rentang data 196 bidang yang dipakai melatihnya.
 - Faktor penentu nilai di atas adalah aproksimasi SHAP yang dikonversi dari skala
   logaritmik ke rupiah untuk kemudahan baca, bukan dekomposisi rupiah yang presisi.
         """
