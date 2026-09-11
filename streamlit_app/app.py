@@ -68,8 +68,14 @@ st.markdown(
         background: var(--warn-bg) !important; border: 1px solid var(--warn-border) !important;
         border-radius: 10px !important;
     }
+    div[class*="st-key-kartu_rujukan_kecamatan"] {
+        padding: 12px 18px 20px 18px !important;
+    }
     div[class*="st-key-kartu_rujukan_kecamatan"] [data-testid="stVerticalBlock"] {
-        padding-bottom: var(--sp-sm);
+        gap: 0.35rem !important;
+    }
+    div[class*="st-key-kartu_rujukan_kecamatan"] .element-container {
+        margin: 0 !important;
     }
     .label-kecil {
         font-family: var(--font-body); font-size: 12.5px; font-weight: 600; letter-spacing: .4px;
