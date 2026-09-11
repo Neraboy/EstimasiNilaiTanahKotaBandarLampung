@@ -75,6 +75,10 @@ st.markdown(
     .peringatan-disclaimer {
         background: var(--warn-bg); border: 1px solid var(--warn-border); border-radius: 10px;
         padding: var(--sp-sm) var(--sp-md); color: var(--warn-ink); font-size: 14px; line-height: 1.55;
+        margin-top: var(--sp-sm); margin-bottom: var(--sp-xxs);
+    }
+    .rujukan-baris {
+        font-size: 14px; color: var(--ink); line-height: 1.6; margin: var(--sp-xxs) 0;
     }
     .hasil-angka { font-size: 30px; font-weight: 700; color: var(--gold); margin: var(--sp-xxs) 0; }
     .hasil-sub { font-size: 12.5px; color: var(--ink-soft); }
@@ -461,15 +465,15 @@ if hitung:
         kelas_kartu = "kartu_rujukan_kecamatan" if b["dasar"] == "transaksi" else "kartu_rujukan_kecamatan_bahaya"
         with st.container(border=True, key=kelas_kartu):
             st.markdown(f'<div class="label-kecil">Rujukan: kecamatan {kecamatan_lokasi}</div>', unsafe_allow_html=True)
-            st.write(
-                f"Nilai tengah kecamatan ini "
-                f"(dasar: {'transaksi riil' if b['dasar']=='transaksi' else 'estimasi model, data tipis'}, "
-                f"n = {int(b['n_tx'])} transaksi): **Rp{b['nir']:,.0f} / m²**"
+            st.markdown(
+                f'<div class="rujukan-baris">Kecamatan: <strong>{kecamatan_lokasi}</strong></div>'
+                f'<div class="rujukan-baris">Data pembanding: <strong>{int(b["n_tx"])}</strong></div>',
+                unsafe_allow_html=True,
             )
             if b["dasar"] != "transaksi":
                 st.markdown(
-                    '<div class="peringatan-disclaimer">Akurasi rujukan ini lebih rendah karena keterbatasan '
-                    "data pembanding di kecamatan ini.</div>",
+                    '<div class="peringatan-disclaimer">PERHATIAN: Zona memiliki data pembanding yang sedikit '
+                    "sehingga indikasi nilainya makin berpotensi meleset jauh.</div>",
                     unsafe_allow_html=True,
                 )
 
