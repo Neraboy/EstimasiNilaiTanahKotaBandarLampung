@@ -68,6 +68,9 @@ st.markdown(
         background: var(--warn-bg) !important; border: 1px solid var(--warn-border) !important;
         border-radius: 10px !important;
     }
+    div[class*="st-key-kartu_rujukan_kecamatan"] [data-testid="stVerticalBlock"] {
+        padding-bottom: var(--sp-sm);
+    }
     .label-kecil {
         font-family: var(--font-body); font-size: 12.5px; font-weight: 600; letter-spacing: .4px;
         text-transform: uppercase; color: var(--ink); margin-bottom: var(--sp-xs);
@@ -198,15 +201,16 @@ LABEL_FITUR = {
 }
 
 st.title("Kalkulator Indikasi Awal Nilai Tanah")
-st.caption("Purwarupa skripsi -- Kota Bandar Lampung -- Model Random Forest")
+st.caption("Purwarupa ini merupakan implementasi model machine learning berupa Random Forest untuk mengestimasi nilai tanah Kota Bandar Lampung")
 
 st.markdown(
     """
     <div class="peringatan-disclaimer">
     <b>Ini BUKAN alat penetapan NJOP, ZNT, atau NIR resmi.</b> Angka yang keluar dari
     kalkulator ini adalah indikasi awal untuk satu bidang berdasarkan model machine
-    learning skripsi. Menurunkan indikasi ini menjadi ZNT dan NIR resmi adalah proses
-    dan kewenangan BPPRD sendiri, bukan keluaran otomatis dari alat ini.
+    learning. Menurunkan indikasi nilai awal ini menjadi NJOP/ZNT/NIR resmi adalah
+    proses dan kewenangan BPPRD sendiri. Alat ini dirancang sebagai *alat bantu* untuk
+    indikasi nilai awal.
     </div>
     """,
     unsafe_allow_html=True,
@@ -258,8 +262,9 @@ with col_map:
     st.markdown('<div class="label-kecil">Peta referensi kecamatan</div>', unsafe_allow_html=True)
     st.caption(
         "Warna zona menunjukkan jumlah transaksi pembanding, bukan tinggi rendahnya harga. "
-        "Makin hijau, makin banyak data pembanding dan makin bisa diandalkan. Makin merah, "
-        "makin sedikit data pembanding dan indikasi nilainya makin berpotensi meleset jauh."
+        "Semakin hijau, semakin banyak data pembanding dan semakin dapat diandalkan. Semakin "
+        "merah, semakin sedikit data pembanding dan indikasi nilainya semakin berpotensi "
+        "meleset jauh."
     )
     try:
         CARTO_KEY = st.secrets.get("CARTO_API_KEY", "")
@@ -425,8 +430,8 @@ if hitung:
     with st.container(border=True, key="kartu_faktor"):
         st.markdown('<div class="label-kecil">Faktor yang paling memengaruhi angka ini</div>', unsafe_allow_html=True)
         st.caption(
-            "Menunjukkan enam faktor dengan pengaruh terbesar terhadap indikasi nilai per m² di atas, "
-            "dalam perkiraan rupiah, bukan grafik teknis. Hijau menaikkan nilai, merah menurunkan."
+            "Menunjukkan enam faktor dengan pengaruh terbesar terhadap indikasi nilai per m² di atas "
+            "dalam perkiraan rupiah. Hijau *menaikkan* nilai, merah *menurunkan* nilai."
         )
         st.markdown(
             f'<div class="hasil-dasar">Nilai dasar model (rata-rata bidang sejenis di data latih): '
@@ -453,8 +458,8 @@ if hitung:
         st.caption(
             "Angka rupiah di atas perkiraan pengaruh tiap faktor secara lokal untuk bidang ini saja "
             "(bukan aturan umum berlaku sama untuk semua bidang), dihitung mulai dari nilai dasar model "
-            "di atas -- jumlah totalnya tidak dijamin pas sama dengan indikasi nilai akhir karena model "
-            "dilatih pada skala logaritmik."
+            "di atas (jumlah totalnya tidak dijamin pas sama dengan indikasi nilai akhir karena model "
+            "dilatih pada skala logaritmik)."
         )
 
     # --- Rujukan nilai tengah kecamatan ---
@@ -464,7 +469,6 @@ if hitung:
         b = baris_kec.iloc[0]
         kelas_kartu = "kartu_rujukan_kecamatan" if b["dasar"] == "transaksi" else "kartu_rujukan_kecamatan_bahaya"
         with st.container(border=True, key=kelas_kartu):
-            st.markdown(f'<div class="label-kecil">Rujukan: kecamatan {kecamatan_lokasi}</div>', unsafe_allow_html=True)
             st.markdown(
                 f'<div class="rujukan-baris">Kecamatan: <strong>{kecamatan_lokasi}</strong></div>'
                 f'<div class="rujukan-baris">Data pembanding: <strong>{int(b["n_tx"])}</strong></div>',
@@ -489,31 +493,29 @@ with st.expander("Keterbatasan yang perlu diketahui sebelum memakai angka ini"):
 - MAPE (Mean Absolute Percentage Error) adalah rata-rata simpangan prediksi terhadap
   harga sebenarnya, dalam persen, tanpa bobot ekstra untuk simpangan besar.
 
-**Hasil 5-fold cross-validation (196 bidang, situasi interpolasi, banyak titik transaksi
-di sekitar):**
+**Hasil 5-fold cross-validation (interpolasi):**
 - R² skala ln **0,5114**, skala rupiah **0,4161**
 - RMSE **Rp563.931/m²**
 - MAPE **43,07%**
 
-**Hasil spatial block cross-validation per kecamatan (situasi ekstrapolasi, lebih relevan
-untuk purwarupa karena zona bertransaksi tipis mengandalkan ZNT tetangga):**
+**Hasil spatial block cross-validation per kecamatan (ekstrapolasi):**
 - R² skala ln **0,3659**, skala rupiah **0,1364**
 - RMSE **Rp691.171/m²**
 - MAPE **49,19%**
 
-- R² in-sample (model diuji pada data yang sama dipakai melatihnya): menunggu konfirmasi
-  dari Colab. Angka ini bukan ukuran validitas, model mana pun gampang cocok dengan data
-  yang sudah dilihatnya. Ukuran yang valid untuk menilai kegunaan tetap R², RMSE, dan MAPE
-  hasil cross-validation di atas.
+- R² in-sample (model diuji pada data yang sama dipakai melatihnya): R² skala ln
+  **0,9246**, skala rupiah **0,8486**, MAPE **15,63%**, RMSE **Rp287.175/m²**. Angka ini
+  bukan ukuran validitas, model mana pun gampang cocok dengan data yang sudah dilihatnya.
+  Ukuran yang valid untuk menilai kegunaan tetap R², RMSE, dan MAPE hasil cross-validation
+  di atas.
 
-**Uji IAAO, 5-fold CV (situasi interpolasi):**
+**Uji IAAO, 5-fold CV (interpolasi):**
 - COD **34,38** (ambang 5-20)
 - PRD **1,2068** (ambang 0,98-1,03)
 - PRB **-0,1813** (ambang -0,05 s.d. 0,05)
 - Ketiganya gagal ambang.
 
-**Uji IAAO, spatial block CV per kecamatan (situasi ekstrapolasi, lebih relevan untuk
-purwarupa karena zona bertransaksi tipis mengandalkan ZNT tetangga):**
+**Uji IAAO, spatial block CV per kecamatan (ekstrapolasi):**
 - COD **39,00** (ambang 5-20)
 - PRD **1,3383** (ambang 0,98-1,03)
 - PRB **-0,4448** (ambang -0,05 s.d. 0,05)
