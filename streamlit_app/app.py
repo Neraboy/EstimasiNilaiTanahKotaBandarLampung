@@ -222,7 +222,7 @@ st.markdown(
     <b>Ini BUKAN alat penetapan NJOP, ZNT, atau NIR resmi.</b> Angka yang keluar dari
     kalkulator ini adalah indikasi awal untuk satu bidang berdasarkan model machine
     learning. Menurunkan indikasi nilai awal ini menjadi NJOP/ZNT/NIR resmi adalah
-    proses dan kewenangan BPPRD sendiri. Alat ini dirancang sebagai *alat bantu* untuk
+    proses dan kewenangan BPPRD sendiri. Alat ini dirancang sebagai alat bantu untuk
     indikasi nilai awal.
     </div>
     """,
@@ -567,11 +567,10 @@ with st.expander("Keterbatasan yang perlu diketahui sebelum memakai angka ini"):
 - RMSE **Rp691.171/m²**
 - MAPE **49,19%**
 
-- R² in-sample (model diuji pada data yang sama dipakai melatihnya): R² skala ln
-  **0,9246**, skala rupiah **0,8486**, MAPE **15,63%**, RMSE **Rp287.175/m²**. Angka ini
-  bukan ukuran validitas, model mana pun gampang cocok dengan data yang sudah dilihatnya.
-  Ukuran yang valid untuk menilai kegunaan tetap R², RMSE, dan MAPE hasil cross-validation
-  di atas.
+**R² in-sample (model diuji pada data yang sama dipakai melatihnya):**
+- R² skala ln **0,9246**, skala rupiah **0,8486**
+- RMSE **Rp287.175/m²**
+- MAPE **15,63%**
 
 **Uji IAAO, 5-fold CV (interpolasi):**
 - COD **34,38** (ambang 5-20)
