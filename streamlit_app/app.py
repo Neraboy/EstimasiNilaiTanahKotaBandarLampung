@@ -397,7 +397,7 @@ if hitung:
     batas_atas_total = batas_atas_m2 * luas
 
     with st.container(border=True, key="kartu_hasil"):
-        st.markdown('<div class="label-kecil">Hasil</div>', unsafe_allow_html=True)
+        st.markdown('<div class="label-kecil">Hasil (Grid 500m)</div>', unsafe_allow_html=True)
         c1, c2 = st.columns(2)
         c1.metric("Indikasi awal nilai per m²", f"Rp{pred_per_m2:,.0f}")
         c2.metric("Indikasi awal total bidang", f"Rp{pred_total:,.0f}")
@@ -413,17 +413,40 @@ if hitung:
             "selang kepercayaan statistik formal. Anggap sebagai perkiraan kasar seberapa "
             "jauh indikasi di atas bisa meleset dari harga sebenarnya."
         )
-        if pred_padat_per_m2 is not None:
+        st.caption(
+            f"Fitur jarak jaringan jalan dipinjam dari titik referensi grid terdekat "
+            f"(~{jarak_ke_titik_m:,.0f} meter dari lokasi yang ditandai), bukan dihitung ulang presisi "
+            "untuk lokasi persis ini."
+        )
+
+    if pred_padat_per_m2 is not None:
+        pred_padat_total = pred_padat_per_m2 * luas
+        batas_bawah_padat_m2 = pred_padat_per_m2 * (1 - MAPE_SPATIAL)
+        batas_atas_padat_m2 = pred_padat_per_m2 * (1 + MAPE_SPATIAL)
+        batas_bawah_padat_total = batas_bawah_padat_m2 * luas
+        batas_atas_padat_total = batas_atas_padat_m2 * luas
+
+        with st.container(border=True, key="kartu_hasil_padat"):
+            st.markdown('<div class="label-kecil">Hasil (Grid 100m)</div>', unsafe_allow_html=True)
+            c1, c2 = st.columns(2)
+            c1.metric("Indikasi awal nilai per m²", f"Rp{pred_padat_per_m2:,.0f}")
+            c2.metric("Indikasi awal total bidang", f"Rp{pred_padat_total:,.0f}")
             st.markdown(
-                f'<div class="hasil-sub" style="margin-top:8px;">Pembanding grid referensi '
-                f"lebih rapat (100 m, khusus Kemiling): <b>Rp{pred_padat_per_m2:,.0f} / m²</b></div>",
+                f'<div class="hasil-sub" style="margin-top:8px;">Rentang per m²: '
+                f"Rp{batas_bawah_padat_m2:,.0f} sampai Rp{batas_atas_padat_m2:,.0f}</div>"
+                f'<div class="hasil-sub">Rentang total bidang: '
+                f"Rp{batas_bawah_padat_total:,.0f} sampai Rp{batas_atas_padat_total:,.0f}</div>",
                 unsafe_allow_html=True,
             )
             st.caption(
-                "Grid 100 meter menempatkan fitur jarak jaringan jalan lebih dekat ke lokasi "
-                "sebenarnya dibanding grid 500 meter standar, terbukti menurunkan error pada uji "
-                "31 bidang transaksi Kemiling (lihat Status_Skripsi.md Bagian 4.3). Baru tersedia "
-                "untuk Kemiling, belum kecamatan lain."
+                "Rentang ini dari MAPE hasil spatial block cross-validation (49,19%), bukan "
+                "selang kepercayaan statistik formal. Anggap sebagai perkiraan kasar seberapa "
+                "jauh indikasi di atas bisa meleset dari harga sebenarnya."
+            )
+            st.caption(
+                f"Fitur jarak jaringan jalan dipinjam dari titik referensi grid terdekat "
+                f"(~{jarak_ke_titik_padat_m:,.0f} meter dari lokasi yang ditandai), bukan dihitung ulang "
+                "presisi untuk lokasi persis ini."
             )
 
     # --- Peringatan ekstrapolasi ---
@@ -443,12 +466,6 @@ if hitung:
             f"Fitur jarak jaringan jalan dipinjam dari titik referensi grid sejauh "
             f"~{jarak_ke_titik_m:,.0f} meter dari lokasi yang kamu tandai (grid berjarak 500 m, "
             "jadi ini di luar radius aproksimasi yang wajar). Anggap indikasi ini lebih kasar dari biasanya."
-        )
-    else:
-        st.caption(
-            f"Fitur jarak jaringan jalan dipinjam dari titik referensi grid terdekat "
-            f"(~{jarak_ke_titik_m:,.0f} meter dari lokasi yang ditandai), bukan dihitung ulang presisi "
-            "untuk lokasi persis ini."
         )
     for p in peringatan:
         st.markdown(f'<div class="peringatan-disclaimer" style="margin-top:8px;">{p}</div>', unsafe_allow_html=True)
