@@ -135,6 +135,12 @@ def load_grid():
 
 
 @st.cache_data
+def load_grid_kemiling_padat():
+    path = os.path.join(DATA, "grid_lookup_kemiling_100m.csv")
+    return pd.read_csv(path) if os.path.exists(path) else None
+
+
+@st.cache_data
 def load_kecamatan_nir():
     return pd.read_csv(os.path.join(DATA, "kecamatan_nir.csv"))
 
@@ -152,6 +158,7 @@ def load_shap_explainer(_model):
 
 model, info = load_model()
 grid = load_grid()
+grid_kemiling_padat = load_grid_kemiling_padat()
 kec_nir = load_kecamatan_nir()
 zona_geojson = load_zona_geojson()
 explainer = load_shap_explainer(model)
@@ -362,6 +369,28 @@ if hitung:
     pred_per_m2 = float(np.exp(pred_ln))
     pred_total = pred_per_m2 * luas
 
+    # --- Perbandingan opsional: grid referensi lebih rapat (100 m, khusus Kemiling) ---
+    # Proof-of-concept sidang, lihat Status_Skripsi.md Bagian 4.3. Cuma aktif kalau
+    # lokasi yang ditandai jatuh dekat cakupan grid padat itu (dalam radius 150 meter
+    # dari titik grid terdekatnya) -- otomatis nonaktif di luar itu, tidak perlu
+    # deteksi batas kecamatan terpisah.
+    pred_padat_per_m2 = None
+    jarak_ke_titik_padat_m = None
+    if grid_kemiling_padat is not None:
+        d2_padat = (
+            (grid_kemiling_padat["latitude"] - lat_manual) ** 2
+            + (grid_kemiling_padat["longitude"] - lon_manual) ** 2
+        )
+        idx_padat = d2_padat.idxmin()
+        jarak_ke_titik_padat_m = np.sqrt(d2_padat.loc[idx_padat]) * 111000
+        if jarak_ke_titik_padat_m <= 150:
+            titik_padat = grid_kemiling_padat.loc[idx_padat]
+            baris_padat = dict(baris)
+            for c in JARAK_COLS:
+                baris_padat[c] = titik_padat[c]
+            X_padat = pd.DataFrame([baris_padat])[FITUR]
+            pred_padat_per_m2 = float(np.exp(model.predict(X_padat)[0]))
+
     batas_bawah_m2 = pred_per_m2 * (1 - MAPE_SPATIAL)
     batas_atas_m2 = pred_per_m2 * (1 + MAPE_SPATIAL)
     batas_bawah_total = batas_bawah_m2 * luas
@@ -384,6 +413,18 @@ if hitung:
             "selang kepercayaan statistik formal. Anggap sebagai perkiraan kasar seberapa "
             "jauh indikasi di atas bisa meleset dari harga sebenarnya."
         )
+        if pred_padat_per_m2 is not None:
+            st.markdown(
+                f'<div class="hasil-sub" style="margin-top:8px;">Pembanding grid referensi '
+                f"lebih rapat (100 m, khusus Kemiling): <b>Rp{pred_padat_per_m2:,.0f} / m²</b></div>",
+                unsafe_allow_html=True,
+            )
+            st.caption(
+                "Grid 100 meter menempatkan fitur jarak jaringan jalan lebih dekat ke lokasi "
+                "sebenarnya dibanding grid 500 meter standar, terbukti menurunkan error pada uji "
+                "31 bidang transaksi Kemiling (lihat Status_Skripsi.md Bagian 4.3). Baru tersedia "
+                "untuk Kemiling, belum kecamatan lain."
+            )
 
     # --- Peringatan ekstrapolasi ---
     peringatan = []
