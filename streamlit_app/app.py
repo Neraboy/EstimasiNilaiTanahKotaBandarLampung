@@ -277,7 +277,9 @@ with col_map:
         "Warna zona menunjukkan jumlah transaksi pembanding, bukan tinggi rendahnya harga. "
         "Semakin hijau, semakin banyak data pembanding dan semakin dapat diandalkan. Semakin "
         "merah, semakin sedikit data pembanding dan indikasi nilainya semakin berpotensi "
-        "meleset jauh."
+        "meleset jauh. Arahkan kursor ke tiap zona untuk melihat Nilai Indikasi Rata-rata "
+        "(NIR) kecamatan tersebut beserta sumbernya (transaksi aktual atau prediksi model). "
+        "NIR ini BUKAN Zona Nilai Tanah (ZNT) resmi."
     )
     try:
         CARTO_KEY = st.secrets.get("CARTO_API_KEY", "")
@@ -302,8 +304,21 @@ with col_map:
         subdomains="abcd",
         max_zoom=19,
     ).add_to(m)
+    # Salin properti geojson dan tambahkan label NIR + sumber yang sudah diformat,
+    # supaya tooltip peta bisa menampilkan NIR tiap kecamatan (dipisah sumbernya),
+    # bukan cuma jumlah transaksi seperti versi sebelumnya. Warna zona tetap
+    # mengikuti jumlah transaksi (n_transaksi), NIR ditambahkan sebagai info,
+    # bukan pengganti skema warna.
+    zona_geojson_label = json.loads(json.dumps(zona_geojson))
+    for feat in zona_geojson_label["features"]:
+        p = feat["properties"]
+        nir_val = p.get("nir_per_m2")
+        dasar_val = p.get("dasar", "")
+        p["nir_label"] = f"Rp{nir_val:,.0f}/m²" if nir_val is not None else "-"
+        p["sumber_label"] = "Transaksi aktual" if dasar_val == "transaksi" else "Prediksi model (data tipis)"
+
     folium.GeoJson(
-        zona_geojson,
+        zona_geojson_label,
         name="Kecamatan",
         style_function=lambda f: {
             "fillColor": warna_gradien_data(f["properties"].get("n_transaksi", 0)),
@@ -312,8 +327,8 @@ with col_map:
             "fillOpacity": 0.55,
         },
         tooltip=folium.GeoJsonTooltip(
-            fields=["kecamatan", "n_transaksi"],
-            aliases=["Kecamatan:", "Jumlah transaksi pembanding:"],
+            fields=["kecamatan", "n_transaksi", "nir_label", "sumber_label"],
+            aliases=["Kecamatan:", "Jumlah transaksi pembanding:", "NIR kecamatan:", "Sumber NIR:"],
         ),
     ).add_to(m)
     if st.session_state["titik_klik_peta"]:
@@ -531,17 +546,26 @@ if hitung:
     baris_kec = kec_nir[kec_nir["kecamatan"] == kecamatan_lokasi]
     if len(baris_kec):
         b = baris_kec.iloc[0]
-        kelas_kartu = "kartu_rujukan_kecamatan" if b["dasar"] == "transaksi" else "kartu_rujukan_kecamatan_bahaya"
+        dasar_transaksi = b["dasar"] == "transaksi"
+        kelas_kartu = "kartu_rujukan_kecamatan" if dasar_transaksi else "kartu_rujukan_kecamatan_bahaya"
+        label_sumber = "transaksi aktual" if dasar_transaksi else "prediksi model (data tipis)"
         with st.container(border=True, key=kelas_kartu):
             st.markdown(
                 f'<div class="rujukan-baris">Kecamatan: <strong>{kecamatan_lokasi}</strong></div>'
+                f'<div class="rujukan-baris">NIR kecamatan: <strong>Rp{b["nir"]:,.0f}/m²</strong> '
+                f'(sumber: {label_sumber})</div>'
                 f'<div class="rujukan-baris">Data pembanding: <strong>{int(b["n_tx"])}</strong></div>',
                 unsafe_allow_html=True,
             )
-            if b["dasar"] != "transaksi":
+            st.caption(
+                "NIR di sini BUKAN Zona Nilai Tanah (ZNT) resmi PMK 85/2024 atau Permen "
+                "ATR/BPN 3/2026, cuma konteks pembanding akademik pada skala kecamatan."
+            )
+            if not dasar_transaksi:
                 st.markdown(
                     '<div class="peringatan-disclaimer">PERHATIAN: Zona memiliki data pembanding yang sedikit '
-                    "sehingga indikasi nilainya makin berpotensi meleset jauh.</div>",
+                    "sehingga indikasi nilainya makin berpotensi meleset jauh, dan NIR yang ditampilkan berasal "
+                    "dari prediksi model, bukan transaksi aktual.</div>",
                     unsafe_allow_html=True,
                 )
 
