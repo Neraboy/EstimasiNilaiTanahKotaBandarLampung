@@ -240,6 +240,11 @@ with col_form:
             help=f"Rentang data latih model: {RENTANG_LATIH['luas'][0]:,} - {RENTANG_LATIH['luas'][1]:,} m². "
                  "Di luar rentang ini, model melakukan ekstrapolasi dan hasilnya kurang bisa diandalkan.",
         )
+        st.caption(
+            "Kalau angka yang diketik ditolak (di luar 1-100.000 m²) atau kolom ini dikosongkan, "
+            "kalkulator otomatis memakai nilai valid terakhir yang tersimpan, bukan menghitung dengan "
+            "angka yang baru saja kamu ketik."
+        )
 
     with st.container(border=True, key="kartu_data_bidang"):
         st.markdown('<div class="label-kecil">2. Data bidang lainnya</div>', unsafe_allow_html=True)
@@ -270,6 +275,11 @@ with col_form:
             help="Posisi barat-timur di bumi, dalam derajat desimal. Bandar Lampung sekitar "
                  "105,2 derajat (di sebelah timur garis 0 derajat yang melewati Greenwich).",
         )
+        if sumber_lokasi == "Input manual":
+            st.caption(
+                "Kalau kolom lintang/bujur dikosongkan tanpa mengetik angka baru, kalkulator "
+                "otomatis memakai nilai valid terakhir yang tersimpan."
+            )
 
 with col_map:
     st.markdown('<div class="label-kecil">Peta referensi kecamatan</div>', unsafe_allow_html=True)
@@ -349,12 +359,23 @@ else:
 st.write("")
 hitung = st.button("Hitung indikasi nilai", type="primary", use_container_width=True)
 
+BATAS_JARAK_GRID_M = 5000  # di atas ini, lokasi dianggap mustahil berada di wilayah studi
+
 if hitung:
     # --- Cari titik grid terdekat untuk meminjam 9 fitur jarak jaringan jalan ---
     d2 = (grid["latitude"] - lat_manual) ** 2 + (grid["longitude"] - lon_manual) ** 2
     idx_terdekat = d2.idxmin()
     titik = grid.loc[idx_terdekat]
     jarak_ke_titik_m = np.sqrt(d2.loc[idx_terdekat]) * 111000  # derajat -> meter, aproksimasi kasar
+
+    if jarak_ke_titik_m > BATAS_JARAK_GRID_M:
+        st.error(
+            f"Lokasi yang ditandai berjarak sekitar {jarak_ke_titik_m/1000:,.0f} km dari titik "
+            "referensi grid terdekat, jauh di luar wilayah Kota Bandar Lampung yang dicakup model. "
+            "Kalkulator tidak menghitung indikasi nilai untuk lokasi ini. Periksa kembali koordinat "
+            "yang dimasukkan."
+        )
+        st.stop()
 
     baris = {
         "ln_luas": np.log(luas),
