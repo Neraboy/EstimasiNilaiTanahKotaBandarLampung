@@ -236,14 +236,9 @@ with col_form:
     with st.container(border=True, key="kartu_luas_bidang"):
         st.markdown('<div class="label-kecil">1. Luas bidang</div>', unsafe_allow_html=True)
         luas = st.number_input(
-            "Luas tanah (m²)", min_value=1, max_value=100000, value=170, step=1,
+            "Luas tanah (m²)", value=170, step=1,
             help=f"Rentang data latih model: {RENTANG_LATIH['luas'][0]:,} - {RENTANG_LATIH['luas'][1]:,} m². "
                  "Di luar rentang ini, model melakukan ekstrapolasi dan hasilnya kurang bisa diandalkan.",
-        )
-        st.caption(
-            "Kalau angka yang diketik ditolak (di luar 1-100.000 m²) atau kolom ini dikosongkan, "
-            "kalkulator otomatis memakai nilai valid terakhir yang tersimpan, bukan menghitung dengan "
-            "angka yang baru saja kamu ketik."
         )
 
     with st.container(border=True, key="kartu_data_bidang"):
@@ -360,6 +355,16 @@ st.write("")
 hitung = st.button("Hitung indikasi nilai", type="primary", use_container_width=True)
 
 BATAS_JARAK_GRID_M = 5000  # di atas ini, lokasi dianggap mustahil berada di wilayah studi
+LUAS_MIN_M2 = 1
+LUAS_MAKS_M2 = 100000
+
+if hitung and not (LUAS_MIN_M2 <= luas <= LUAS_MAKS_M2):
+    st.error(
+        f"Luas {luas:,.0f} m² tidak valid. Masukkan luas tanah antara {LUAS_MIN_M2:,} dan "
+        f"{LUAS_MAKS_M2:,} m². Kalkulator tidak menghitung indikasi nilai untuk angka ini, "
+        "periksa kembali luas yang dimasukkan."
+    )
+    st.stop()
 
 if hitung:
     # --- Cari titik grid terdekat untuk meminjam 9 fitur jarak jaringan jalan ---
