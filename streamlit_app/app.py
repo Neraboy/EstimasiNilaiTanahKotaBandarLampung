@@ -270,11 +270,6 @@ with col_form:
             help="Posisi barat-timur di bumi, dalam derajat desimal. Bandar Lampung sekitar "
                  "105,2 derajat (di sebelah timur garis 0 derajat yang melewati Greenwich).",
         )
-        if sumber_lokasi == "Input manual":
-            st.caption(
-                "Kalau kolom lintang/bujur dikosongkan tanpa mengetik angka baru, kalkulator "
-                "otomatis memakai nilai valid terakhir yang tersimpan."
-            )
 
 with col_map:
     st.markdown('<div class="label-kecil">Peta referensi kecamatan</div>', unsafe_allow_html=True)
