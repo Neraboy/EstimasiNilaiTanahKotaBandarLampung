@@ -1,5 +1,5 @@
 """
-Kalkulator Indikasi Awal Nilai Tanah -- Kota Bandar Lampung
+Indikasi Awal Nilai Tanah -- Kota Bandar Lampung
 Purwarupa skripsi, BUKAN alat penetapan NJOP/ZNT/NIR resmi.
 Identitas visual mengikuti DESIGN.md di folder ini.
 """
@@ -17,7 +17,7 @@ from streamlit_folium import st_folium
 BASE = os.path.dirname(__file__)
 DATA = os.path.join(BASE, "data")
 
-st.set_page_config(page_title="Kalkulator Indikasi Nilai Tanah - Bandar Lampung", layout="wide")
+st.set_page_config(page_title="Protoype Indikasi Nilai Pasar Tanah - Bandar Lampung", layout="wide")
 
 # --- Gaya visual, lihat DESIGN.md untuk penjelasan lengkap palet, tipografi, dan alasan
 # penolakan SF Pro/Gotham (lisensi). PENTING: st.markdown menjalankan parser markdown
