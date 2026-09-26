@@ -213,7 +213,7 @@ LABEL_FITUR = {
     "kat__zonasi_Permukiman": "Zonasi: Permukiman",
 }
 
-st.title("Kalkulator Indikasi Awal Nilai Tanah")
+st.title("Prototype Indikasi Awal Nilai Pasar Tanah")
 st.caption("Purwarupa ini merupakan implementasi model machine learning berupa Random Forest untuk mengestimasi nilai tanah Kota Bandar Lampung")
 
 st.markdown(
