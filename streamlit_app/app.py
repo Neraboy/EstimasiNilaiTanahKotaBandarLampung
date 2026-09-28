@@ -17,7 +17,7 @@ from streamlit_folium import st_folium
 BASE = os.path.dirname(__file__)
 DATA = os.path.join(BASE, "data")
 
-st.set_page_config(page_title="Protoype Indikasi Nilai Pasar Tanah - Bandar Lampung", layout="wide")
+st.set_page_config(page_title="Purwarupa Indikasi Nilai Pasar Tanah - Bandar Lampung", layout="wide")
 
 # --- Gaya visual, lihat DESIGN.md untuk penjelasan lengkap palet, tipografi, dan alasan
 # penolakan SF Pro/Gotham (lisensi). PENTING: st.markdown menjalankan parser markdown
@@ -213,14 +213,14 @@ LABEL_FITUR = {
     "kat__zonasi_Permukiman": "Zonasi: Permukiman",
 }
 
-st.title("Prototype Indikasi Awal Nilai Pasar Tanah")
+st.title("Purwarupa Indikasi Awal Nilai Pasar Tanah")
 st.caption("Purwarupa ini merupakan implementasi model machine learning berupa Random Forest untuk mengestimasi nilai tanah Kota Bandar Lampung")
 
 st.markdown(
     """
     <div class="peringatan-disclaimer">
     <b>Ini BUKAN alat penetapan NJOP, ZNT, atau NIR resmi.</b> Angka yang keluar dari
-    kalkulator ini adalah indikasi awal untuk satu bidang berdasarkan model machine
+    purwarupa ini adalah indikasi awal untuk satu bidang berdasarkan model machine
     learning. Menurunkan indikasi nilai awal ini menjadi NJOP/ZNT/NIR resmi adalah
     proses dan kewenangan BPPRD sendiri. Alat ini dirancang sebagai alat bantu untuk
     indikasi nilai awal.
@@ -356,7 +356,7 @@ LUAS_MAKS_M2 = 100000
 if hitung and not (LUAS_MIN_M2 <= luas <= LUAS_MAKS_M2):
     st.error(
         f"Luas {luas:,.0f} m² tidak valid. Masukkan luas tanah antara {LUAS_MIN_M2:,} dan "
-        f"{LUAS_MAKS_M2:,} m². Kalkulator tidak menghitung indikasi nilai untuk angka ini, "
+        f"{LUAS_MAKS_M2:,} m². Purwarupa tidak menghitung indikasi nilai untuk angka ini, "
         "periksa kembali luas yang dimasukkan."
     )
     st.stop()
@@ -372,7 +372,7 @@ if hitung:
         st.error(
             f"Lokasi yang ditandai berjarak sekitar {jarak_ke_titik_m/1000:,.0f} km dari titik "
             "referensi grid terdekat, jauh di luar wilayah Kota Bandar Lampung yang dicakup model. "
-            "Kalkulator tidak menghitung indikasi nilai untuk lokasi ini. Periksa kembali koordinat "
+            "Purwarupa tidak menghitung indikasi nilai untuk lokasi ini. Periksa kembali koordinat "
             "yang dimasukkan."
         )
         st.stop()
@@ -613,7 +613,7 @@ with st.expander("Keterbatasan yang perlu diketahui sebelum memakai angka ini"):
 - Ketiganya gagal ambang.
 
 **Keterbatasan lain:**
-- Fitur jarak jaringan jalan pada kalkulator ini dipinjam dari titik grid prediksi
+- Fitur jarak jaringan jalan pada purwarupa ini dipinjam dari titik grid prediksi
   terdekat (grid 500 meter), bukan dihitung ulang presisi untuk lokasi persis yang
   ditandai.
 - Random Forest tidak bisa diandalkan untuk memprediksi kombinasi input yang jauh di
