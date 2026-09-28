@@ -1,7 +1,6 @@
 """
 Indikasi Awal Nilai Tanah -- Kota Bandar Lampung
 Purwarupa skripsi, BUKAN alat penetapan NJOP/ZNT/NIR resmi.
-Identitas visual mengikuti DESIGN.md di folder ini.
 """
 import json
 import os
