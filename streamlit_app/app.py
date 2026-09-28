@@ -19,13 +19,6 @@ DATA = os.path.join(BASE, "data")
 
 st.set_page_config(page_title="Purwarupa Indikasi Nilai Pasar Tanah - Bandar Lampung", layout="wide")
 
-# --- Gaya visual, lihat DESIGN.md untuk penjelasan lengkap palet, tipografi, dan alasan
-# penolakan SF Pro/Gotham (lisensi). PENTING: st.markdown menjalankan parser markdown
-# lebih dulu sebelum unsafe_allow_html menyisipkan HTML mentahnya, jadi blok <style> di
-# bawah ini SENGAJA tidak diberi komentar CSS prosa (terutama yang memuat tanda hubung
-# ganda atau tanda bintang tunggal seperti selektor "*"): markdown mengubah "--" jadi en
-# dash dan bisa memakan tanda bintang sebagai penanda italic, yang pernah membuat sisa
-# CSS di bawahnya ikut terpotong/hilang saat dirender. Semua penjelasan ada di DESIGN.md.
 st.markdown(
     """
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -186,14 +179,12 @@ def warna_gradien_data(n_transaksi, n_maks=15):
     b = round(lo[2] + (hi[2] - lo[2]) * t)
     return f"#{r:02x}{g:02x}{b:02x}"
 
-# Rentang data latih, untuk peringatan ekstrapolasi (lihat expander di bagian bawah halaman)
 RENTANG_LATIH = {
     "luas": (56, 10000),
     "latitude": (-5.47485144929159, -5.34246958998922),
     "longitude": (105.190345574862, 105.333857363892),
 }
 
-# Nama fitur teknis -> label yang bisa dipahami orang awam
 LABEL_FITUR = {
     "num__ln_luas": "Luas tanah",
     "num__latitude": "Posisi lintang (utara-selatan)",
@@ -303,9 +294,7 @@ with col_map:
         subdomains="abcd",
         max_zoom=19,
     ).add_to(m)
-    # Warna zona mengikuti jumlah transaksi pembanding (n_transaksi). Tooltip cuma
-    # menampilkan kecamatan dan jumlah data pembanding, tidak ada lagi angka NIR
-    # (dihapus total per keputusan 13 September, lihat Status_Skripsi.md Bagian 5).
+    
     folium.GeoJson(
         zona_geojson,
         name="Kecamatan",
@@ -349,7 +338,7 @@ else:
 st.write("")
 hitung = st.button("Hitung indikasi nilai", type="primary", use_container_width=True)
 
-BATAS_JARAK_GRID_M = 5000  # di atas ini, lokasi dianggap mustahil berada di wilayah studi
+BATAS_JARAK_GRID_M = 5000
 LUAS_MIN_M2 = 1
 LUAS_MAKS_M2 = 100000
 
@@ -394,11 +383,6 @@ if hitung:
     pred_per_m2 = float(np.exp(pred_ln))
     pred_total = pred_per_m2 * luas
 
-    # --- Perbandingan opsional: grid referensi lebih rapat (100 m, khusus Kemiling) ---
-    # Proof-of-concept sidang, lihat Status_Skripsi.md Bagian 4.3. Cuma aktif kalau
-    # lokasi yang ditandai jatuh dekat cakupan grid padat itu (dalam radius 150 meter
-    # dari titik grid terdekatnya) -- otomatis nonaktif di luar itu, tidak perlu
-    # deteksi batas kecamatan terpisah.
     pred_padat_per_m2 = None
     jarak_ke_titik_padat_m = None
     if grid_kemiling_padat is not None:
@@ -501,8 +485,6 @@ if hitung:
     nama_teknis = list(pra.get_feature_names_out())
     shap_values = explainer.shap_values(est_input)[0]
 
-    # Nilai dasar model (expected_value, skala ln) -> rupiah/m2. Ini titik awal sebelum
-    # faktor-faktor di bawah menambah/mengurangi, bukan cuma daftar faktor lepas tanpa acuan.
     base_ln = explainer.expected_value
     if hasattr(base_ln, "__len__"):
         base_ln = base_ln[0]
@@ -510,7 +492,7 @@ if hitung:
 
     kontribusi = []
     for nama, sv in zip(nama_teknis, shap_values):
-        rp = pred_per_m2 * (np.exp(sv) - 1)  # aproksimasi lokal, lihat catatan di bawah
+        rp = pred_per_m2 * (np.exp(sv) - 1)
         kontribusi.append((LABEL_FITUR.get(nama, nama), rp))
     kontribusi.sort(key=lambda t: -abs(t[1]))
     top = kontribusi[:6]
