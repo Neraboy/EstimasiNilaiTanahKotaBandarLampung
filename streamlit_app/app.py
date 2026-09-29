@@ -164,7 +164,7 @@ JARAK_COLS = [
 # MAPE hasil spatial block cross-validation (situasi ekstrapolasi), dipakai sebagai
 # lebar rentang indikasi nilai. Bukan selang kepercayaan statistik formal, cuma
 # perkiraan kasar dari rata-rata simpangan persen model saat diuji pada kecamatan
-# yang tidak pernah dilihatnya. Lihat Status_Skripsi.md Bagian 4.1.
+# yang tidak pernah dilihatnya.
 MAPE_SPATIAL = 0.4919
 
 
@@ -228,7 +228,7 @@ with col_form:
         luas = st.number_input(
             "Luas tanah (m²)", value=170, step=1,
             help=f"Rentang data latih model: {RENTANG_LATIH['luas'][0]:,} - {RENTANG_LATIH['luas'][1]:,} m². "
-                 "Di luar rentang ini, model melakukan ekstrapolasi dan hasilnya kurang bisa diandalkan.",
+                 "Di luar rentang ini, hasil modelnya kurang bisa diandalkan.",
         )
 
     with st.container(border=True, key="kartu_data_bidang"):
@@ -417,8 +417,8 @@ if hitung:
             unsafe_allow_html=True,
         )
         st.caption(
-            "Rentang ini dari MAPE hasil spatial block cross-validation (49,19%), bukan "
-            "selang kepercayaan statistik formal. Anggap sebagai perkiraan kasar seberapa "
+            "Rentang ini dari MAPE hasil spatial block cross-validation (49,19%)."
+            "Anggap sebagai perkiraan kasar seberapa "
             "jauh indikasi di atas bisa meleset dari harga sebenarnya."
         )
         st.caption(
@@ -447,8 +447,8 @@ if hitung:
                 unsafe_allow_html=True,
             )
             st.caption(
-                "Rentang ini dari MAPE hasil spatial block cross-validation (49,19%), bukan "
-                "selang kepercayaan statistik formal. Anggap sebagai perkiraan kasar seberapa "
+                "Rentang ini dari MAPE hasil spatial block cross-validation (49,19%)."
+                "Anggap sebagai perkiraan kasar seberapa "
                 "jauh indikasi di atas bisa meleset dari harga sebenarnya."
             )
             st.caption(
