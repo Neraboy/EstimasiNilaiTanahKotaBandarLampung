@@ -39,13 +39,13 @@
   ],
   "hp_final": {
     "est__max_depth": 15,
-    "est__max_features": "sqrt",
+    "est__max_features": 0.5,
     "est__min_samples_leaf": 1,
-    "est__min_samples_split": 4,
-    "est__n_estimators": 258
+    "est__min_samples_split": 5,
+    "est__n_estimators": 312
   },
-  "r2_in_sample_ln": 0.9245964924953582,
-  "r2_in_sample_rupiah": 0.8485699254885184,
-  "n_training": 196,
-  "catatan": "model_final direplikasi dari model_Random_Forest.py CELL 11, di-fit ke seluruh 196 data dengan hyperparameter hasil RandomizedSearchCV n_iter=64 yang sudah diperoleh sebelumnya di Colab."
+  "r2_in_sample_ln": 0.9144,
+  "r2_in_sample_rupiah": 0.8342,
+  "n_training": 188,
+  "catatan": "model_final versi revisi 188 bidang, dilatih dengan model_Random_Forest.py versi 188 (CELL 11) pada scikit-learn 1.8.0, hyperparameter hasil RandomizedSearchCV n_iter=64 pada seluruh 188 bidang."
 }
