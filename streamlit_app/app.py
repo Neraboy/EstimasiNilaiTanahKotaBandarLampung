@@ -1,6 +1,7 @@
 """
-Indikasi Awal Nilai Tanah -- Kota Bandar Lampung
+Kalkulator Indikasi Awal Nilai Tanah -- Kota Bandar Lampung
 Purwarupa skripsi, BUKAN alat penetapan NJOP/ZNT/NIR resmi.
+Identitas visual mengikuti DESIGN.md di folder ini.
 """
 import json
 import os
@@ -16,8 +17,15 @@ from streamlit_folium import st_folium
 BASE = os.path.dirname(__file__)
 DATA = os.path.join(BASE, "data")
 
-st.set_page_config(page_title="Purwarupa Indikasi Nilai Pasar Tanah - Bandar Lampung", layout="wide")
+st.set_page_config(page_title="Kalkulator Indikasi Nilai Tanah - Bandar Lampung", layout="wide")
 
+# --- Gaya visual, lihat DESIGN.md untuk penjelasan lengkap palet, tipografi, dan alasan
+# penolakan SF Pro/Gotham (lisensi). PENTING: st.markdown menjalankan parser markdown
+# lebih dulu sebelum unsafe_allow_html menyisipkan HTML mentahnya, jadi blok <style> di
+# bawah ini SENGAJA tidak diberi komentar CSS prosa (terutama yang memuat tanda hubung
+# ganda atau tanda bintang tunggal seperti selektor "*"): markdown mengubah "--" jadi en
+# dash dan bisa memakan tanda bintang sebagai penanda italic, yang pernah membuat sisa
+# CSS di bawahnya ikut terpotong/hilang saat dirender. Semua penjelasan ada di DESIGN.md.
 st.markdown(
     """
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -164,8 +172,8 @@ JARAK_COLS = [
 # MAPE hasil spatial block cross-validation (situasi ekstrapolasi), dipakai sebagai
 # lebar rentang indikasi nilai. Bukan selang kepercayaan statistik formal, cuma
 # perkiraan kasar dari rata-rata simpangan persen model saat diuji pada kecamatan
-# yang tidak pernah dilihatnya.
-MAPE_SPATIAL = 0.4919
+# yang tidak pernah dilihatnya. Lihat Status_Skripsi.md Bagian 4.1.
+MAPE_SPATIAL = 0.4803
 
 
 def warna_gradien_data(n_transaksi, n_maks=15):
@@ -178,12 +186,14 @@ def warna_gradien_data(n_transaksi, n_maks=15):
     b = round(lo[2] + (hi[2] - lo[2]) * t)
     return f"#{r:02x}{g:02x}{b:02x}"
 
+# Rentang data latih, untuk peringatan ekstrapolasi (lihat expander di bagian bawah halaman)
 RENTANG_LATIH = {
     "luas": (56, 10000),
     "latitude": (-5.47485144929159, -5.34246958998922),
     "longitude": (105.190345574862, 105.333857363892),
 }
 
+# Nama fitur teknis -> label yang bisa dipahami orang awam
 LABEL_FITUR = {
     "num__ln_luas": "Luas tanah",
     "num__latitude": "Posisi lintang (utara-selatan)",
@@ -203,14 +213,14 @@ LABEL_FITUR = {
     "kat__zonasi_Permukiman": "Zonasi: Permukiman",
 }
 
-st.title("Purwarupa Indikasi Awal Nilai Pasar Tanah")
+st.title("Kalkulator Indikasi Awal Nilai Tanah")
 st.caption("Purwarupa ini merupakan implementasi model machine learning berupa Random Forest untuk mengestimasi nilai tanah Kota Bandar Lampung")
 
 st.markdown(
     """
     <div class="peringatan-disclaimer">
     <b>Ini BUKAN alat penetapan NJOP, ZNT, atau NIR resmi.</b> Angka yang keluar dari
-    purwarupa ini adalah indikasi awal untuk satu bidang berdasarkan model machine
+    kalkulator ini adalah indikasi awal untuk satu bidang berdasarkan model machine
     learning. Menurunkan indikasi nilai awal ini menjadi NJOP/ZNT/NIR resmi adalah
     proses dan kewenangan BPPRD sendiri. Alat ini dirancang sebagai alat bantu untuk
     indikasi nilai awal.
@@ -226,9 +236,9 @@ with col_form:
     with st.container(border=True, key="kartu_luas_bidang"):
         st.markdown('<div class="label-kecil">1. Luas bidang</div>', unsafe_allow_html=True)
         luas = st.number_input(
-            "Luas tanah (m²)", value=170, step=1,
+            "Luas tanah (m²)", value=180, step=1,
             help=f"Rentang data latih model: {RENTANG_LATIH['luas'][0]:,} - {RENTANG_LATIH['luas'][1]:,} m². "
-                 "Di luar rentang ini, hasil modelnya kurang bisa diandalkan.",
+                 "Di luar rentang ini, model melakukan ekstrapolasi dan hasilnya kurang bisa diandalkan.",
         )
 
     with st.container(border=True, key="kartu_data_bidang"):
@@ -293,7 +303,9 @@ with col_map:
         subdomains="abcd",
         max_zoom=19,
     ).add_to(m)
-    
+    # Warna zona mengikuti jumlah transaksi pembanding (n_transaksi). Tooltip cuma
+    # menampilkan kecamatan dan jumlah data pembanding, tidak ada lagi angka NIR
+    # (dihapus total per keputusan 13 September, lihat Status_Skripsi.md Bagian 5).
     folium.GeoJson(
         zona_geojson,
         name="Kecamatan",
@@ -337,14 +349,14 @@ else:
 st.write("")
 hitung = st.button("Hitung indikasi nilai", type="primary", use_container_width=True)
 
-BATAS_JARAK_GRID_M = 5000
+BATAS_JARAK_GRID_M = 5000  # di atas ini, lokasi dianggap mustahil berada di wilayah studi
 LUAS_MIN_M2 = 1
 LUAS_MAKS_M2 = 100000
 
 if hitung and not (LUAS_MIN_M2 <= luas <= LUAS_MAKS_M2):
     st.error(
         f"Luas {luas:,.0f} m² tidak valid. Masukkan luas tanah antara {LUAS_MIN_M2:,} dan "
-        f"{LUAS_MAKS_M2:,} m². Purwarupa tidak menghitung indikasi nilai untuk angka ini, "
+        f"{LUAS_MAKS_M2:,} m². Kalkulator tidak menghitung indikasi nilai untuk angka ini, "
         "periksa kembali luas yang dimasukkan."
     )
     st.stop()
@@ -360,7 +372,7 @@ if hitung:
         st.error(
             f"Lokasi yang ditandai berjarak sekitar {jarak_ke_titik_m/1000:,.0f} km dari titik "
             "referensi grid terdekat, jauh di luar wilayah Kota Bandar Lampung yang dicakup model. "
-            "Purwarupa tidak menghitung indikasi nilai untuk lokasi ini. Periksa kembali koordinat "
+            "Kalkulator tidak menghitung indikasi nilai untuk lokasi ini. Periksa kembali koordinat "
             "yang dimasukkan."
         )
         st.stop()
@@ -382,6 +394,11 @@ if hitung:
     pred_per_m2 = float(np.exp(pred_ln))
     pred_total = pred_per_m2 * luas
 
+    # --- Perbandingan opsional: grid referensi lebih rapat (100 m, khusus Kemiling) ---
+    # Proof-of-concept sidang, lihat Status_Skripsi.md Bagian 4.3. Cuma aktif kalau
+    # lokasi yang ditandai jatuh dekat cakupan grid padat itu (dalam radius 150 meter
+    # dari titik grid terdekatnya) -- otomatis nonaktif di luar itu, tidak perlu
+    # deteksi batas kecamatan terpisah.
     pred_padat_per_m2 = None
     jarak_ke_titik_padat_m = None
     if grid_kemiling_padat is not None:
@@ -417,8 +434,8 @@ if hitung:
             unsafe_allow_html=True,
         )
         st.caption(
-            "Rentang ini dari MAPE hasil spatial block cross-validation (49,19%)."
-            "Anggap sebagai perkiraan kasar seberapa "
+            "Rentang ini dari MAPE hasil spatial block cross-validation (48,03%), bukan "
+            "selang kepercayaan statistik formal. Anggap sebagai perkiraan kasar seberapa "
             "jauh indikasi di atas bisa meleset dari harga sebenarnya."
         )
         st.caption(
@@ -447,8 +464,8 @@ if hitung:
                 unsafe_allow_html=True,
             )
             st.caption(
-                "Rentang ini dari MAPE hasil spatial block cross-validation (49,19%)."
-                "Anggap sebagai perkiraan kasar seberapa "
+                "Rentang ini dari MAPE hasil spatial block cross-validation (48,03%), bukan "
+                "selang kepercayaan statistik formal. Anggap sebagai perkiraan kasar seberapa "
                 "jauh indikasi di atas bisa meleset dari harga sebenarnya."
             )
             st.caption(
@@ -484,6 +501,8 @@ if hitung:
     nama_teknis = list(pra.get_feature_names_out())
     shap_values = explainer.shap_values(est_input)[0]
 
+    # Nilai dasar model (expected_value, skala ln) -> rupiah/m2. Ini titik awal sebelum
+    # faktor-faktor di bawah menambah/mengurangi, bukan cuma daftar faktor lepas tanpa acuan.
     base_ln = explainer.expected_value
     if hasattr(base_ln, "__len__"):
         base_ln = base_ln[0]
@@ -491,7 +510,7 @@ if hitung:
 
     kontribusi = []
     for nama, sv in zip(nama_teknis, shap_values):
-        rp = pred_per_m2 * (np.exp(sv) - 1)
+        rp = pred_per_m2 * (np.exp(sv) - 1)  # aproksimasi lokal, lihat catatan di bawah
         kontribusi.append((LABEL_FITUR.get(nama, nama), rp))
     kontribusi.sort(key=lambda t: -abs(t[1]))
     top = kontribusi[:6]
@@ -567,38 +586,38 @@ with st.expander("Keterbatasan yang perlu diketahui sebelum memakai angka ini"):
   harga sebenarnya, dalam persen, tanpa bobot ekstra untuk simpangan besar.
 
 **Hasil 5-fold cross-validation (interpolasi):**
-- R² skala ln **0,5114**, skala rupiah **0,4161**
-- RMSE **Rp563.931/m²**
-- MAPE **43,07%**
+- R² skala ln **0,5435**, skala rupiah **0,4048**
+- RMSE **Rp542.602/m²**
+- MAPE **40,00%**
 
 **Hasil spatial block cross-validation per kecamatan (ekstrapolasi):**
-- R² skala ln **0,3659**, skala rupiah **0,1364**
-- RMSE **Rp691.171/m²**
-- MAPE **49,19%**
+- R² skala ln **0,3965**, skala rupiah **0,2020**
+- RMSE **Rp631.934/m²**
+- MAPE **48,03%**
 
 **R² in-sample (model diuji pada data yang sama dipakai melatihnya):**
-- R² skala ln **0,9246**, skala rupiah **0,8486**
-- RMSE **Rp287.175/m²**
-- MAPE **15,63%**
+- R² skala ln **0,9144**, skala rupiah **0,8342**
+- RMSE **Rp286.388/m²**
+- MAPE **16,32%**
 
 **Uji IAAO, 5-fold CV (interpolasi):**
-- COD **34,38** (ambang 5-20)
-- PRD **1,2068** (ambang 0,98-1,03)
-- PRB **-0,1813** (ambang -0,05 s.d. 0,05)
+- COD **34,35** (ambang 5-20)
+- PRD **1,2099** (ambang 0,98-1,03)
+- PRB **-0,1961** (ambang -0,05 s.d. 0,05)
 - Ketiganya gagal ambang.
 
 **Uji IAAO, spatial block CV per kecamatan (ekstrapolasi):**
-- COD **39,00** (ambang 5-20)
-- PRD **1,3383** (ambang 0,98-1,03)
-- PRB **-0,4448** (ambang -0,05 s.d. 0,05)
+- COD **38,37** (ambang 5-20)
+- PRD **1,3298** (ambang 0,98-1,03)
+- PRB **-0,4387** (ambang -0,05 s.d. 0,05)
 - Ketiganya gagal ambang.
 
 **Keterbatasan lain:**
-- Fitur jarak jaringan jalan pada purwarupa ini dipinjam dari titik grid prediksi
+- Fitur jarak jaringan jalan pada kalkulator ini dipinjam dari titik grid prediksi
   terdekat (grid 500 meter), bukan dihitung ulang presisi untuk lokasi persis yang
   ditandai.
 - Random Forest tidak bisa diandalkan untuk memprediksi kombinasi input yang jauh di
-  luar rentang data 196 bidang yang dipakai melatihnya.
+  luar rentang data 188 bidang yang dipakai melatihnya.
 - Faktor penentu nilai di atas adalah aproksimasi SHAP yang dikonversi dari skala
   logaritmik ke rupiah untuk kemudahan baca, bukan dekomposisi rupiah yang presisi.
         """
