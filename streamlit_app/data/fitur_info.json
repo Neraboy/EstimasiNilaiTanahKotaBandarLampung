@@ -37,15 +37,6 @@
     "jenis_hak",
     "zonasi"
   ],
-  "hp_final": {
-    "est__max_depth": 15,
-    "est__max_features": 0.5,
-    "est__min_samples_leaf": 1,
-    "est__min_samples_split": 5,
-    "est__n_estimators": 312
-  },
-  "r2_in_sample_ln": 0.9144,
-  "r2_in_sample_rupiah": 0.8342,
-  "n_training": 188,
-  "catatan": "model_final versi revisi 188 bidang, dilatih dengan model_Random_Forest.py versi 188 (CELL 11) pada scikit-learn 1.8.0, hyperparameter hasil RandomizedSearchCV n_iter=64 pada seluruh 188 bidang."
+  "KAL_A": -1.409816624522502,
+  "KAL_B": 1.104291378819457
 }
