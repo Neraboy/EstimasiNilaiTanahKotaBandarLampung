@@ -1,5 +1,5 @@
 """
-Kalkulator Indikasi Awal Nilai Tanah -- Kota Bandar Lampung
+Kalkulator Indikasi Awal Nilai Tanah, Kota Bandar Lampung
 Purwarupa skripsi, BUKAN alat penetapan NJOP/ZNT/NIR resmi.
 Identitas visual mengikuti DESIGN.md di folder ini.
 """
@@ -164,6 +164,19 @@ zona_geojson = load_zona_geojson()
 explainer = load_shap_explainer(model)
 
 FITUR = info["FITUR"]
+# Garis kalibrasi OOB model final (model_Random_Forest.py CELL 11): prediksi ln model
+# mentah dikoreksi menjadi KAL_A + KAL_B x prediksi ln, prosedur yang sama dengan
+# kalibrasi pada validasi silang. Kalau kunci tidak ada (fitur_info.json versi lama),
+# garisnya identitas sehingga aplikasi tetap jalan.
+KAL_A = float(info.get("KAL_A", 0.0))
+KAL_B = float(info.get("KAL_B", 1.0))
+
+
+def prediksi_ln(X):
+    """Prediksi ln(harga per m2) dari model final SETELAH kalibrasi OOB."""
+    return KAL_A + KAL_B * model.predict(X)
+
+
 JARAK_COLS = [
     "jarak_ke_transportasi", "jarak_ke_pendidikan", "jarak_ke_pemerintahan",
     "jarak_ke_kolektor_sekunder", "jarak_ke_kolektor_primer", "jarak_ke_kesehatan",
@@ -173,7 +186,7 @@ JARAK_COLS = [
 # lebar rentang indikasi nilai. Bukan selang kepercayaan statistik formal, cuma
 # perkiraan kasar dari rata-rata simpangan persen model saat diuji pada kecamatan
 # yang tidak pernah dilihatnya. Lihat Status_Skripsi.md Bagian 4.1.
-MAPE_SPATIAL = 0.4803
+MAPE_SPATIAL = 0.5011
 
 
 def warna_gradien_data(n_transaksi, n_maks=15):
@@ -236,7 +249,7 @@ with col_form:
     with st.container(border=True, key="kartu_luas_bidang"):
         st.markdown('<div class="label-kecil">1. Luas bidang</div>', unsafe_allow_html=True)
         luas = st.number_input(
-            "Luas tanah (m²)", value=180, step=1,
+            "Luas tanah (m²)", value=183, step=1,
             help=f"Rentang data latih model: {RENTANG_LATIH['luas'][0]:,} - {RENTANG_LATIH['luas'][1]:,} m². "
                  "Di luar rentang ini, model melakukan ekstrapolasi dan hasilnya kurang bisa diandalkan.",
         )
@@ -255,7 +268,7 @@ with col_form:
             ["Klik peta", "Input manual"],
             horizontal=True,
             help="Pilih salah satu. Kalau \"Klik peta\" dipilih, angka lintang/bujur di bawah "
-                 "diabaikan dan lokasi dari titik yang kamu klik di peta yang dipakai -- begitu "
+                 "diabaikan dan lokasi dari titik yang kamu klik di peta yang dipakai, begitu "
                  "juga sebaliknya, supaya tidak tertukar antara dua sumber koordinat.",
         )
         lat_input = st.number_input(
@@ -390,7 +403,7 @@ if hitung:
         baris[c] = titik[c]
 
     X = pd.DataFrame([baris])[FITUR]
-    pred_ln = model.predict(X)[0]
+    pred_ln = prediksi_ln(X)[0]
     pred_per_m2 = float(np.exp(pred_ln))
     pred_total = pred_per_m2 * luas
 
@@ -414,7 +427,7 @@ if hitung:
             for c in JARAK_COLS:
                 baris_padat[c] = titik_padat[c]
             X_padat = pd.DataFrame([baris_padat])[FITUR]
-            pred_padat_per_m2 = float(np.exp(model.predict(X_padat)[0]))
+            pred_padat_per_m2 = float(np.exp(prediksi_ln(X_padat)[0]))
 
     batas_bawah_m2 = pred_per_m2 * (1 - MAPE_SPATIAL)
     batas_atas_m2 = pred_per_m2 * (1 + MAPE_SPATIAL)
@@ -434,7 +447,7 @@ if hitung:
             unsafe_allow_html=True,
         )
         st.caption(
-            "Rentang ini dari MAPE hasil spatial block cross-validation (48,03%), bukan "
+            "Rentang ini dari MAPE hasil spatial block cross-validation (50,11%), bukan "
             "selang kepercayaan statistik formal. Anggap sebagai perkiraan kasar seberapa "
             "jauh indikasi di atas bisa meleset dari harga sebenarnya."
         )
@@ -464,7 +477,7 @@ if hitung:
                 unsafe_allow_html=True,
             )
             st.caption(
-                "Rentang ini dari MAPE hasil spatial block cross-validation (48,03%), bukan "
+                "Rentang ini dari MAPE hasil spatial block cross-validation (50,11%), bukan "
                 "selang kepercayaan statistik formal. Anggap sebagai perkiraan kasar seberapa "
                 "jauh indikasi di atas bisa meleset dari harga sebenarnya."
             )
@@ -499,13 +512,15 @@ if hitung:
     pra = model.named_steps["pra"]
     est_input = pra.transform(X)
     nama_teknis = list(pra.get_feature_names_out())
-    shap_values = explainer.shap_values(est_input)[0]
+    # Kalibrasi berbentuk garis lurus, jadi SHAP model terkalibrasi = KAL_B x SHAP model mentah
+    shap_values = KAL_B * explainer.shap_values(est_input)[0]
 
     # Nilai dasar model (expected_value, skala ln) -> rupiah/m2. Ini titik awal sebelum
     # faktor-faktor di bawah menambah/mengurangi, bukan cuma daftar faktor lepas tanpa acuan.
     base_ln = explainer.expected_value
     if hasattr(base_ln, "__len__"):
         base_ln = base_ln[0]
+    base_ln = KAL_A + KAL_B * float(base_ln)  # nilai dasar model terkalibrasi
     base_per_m2 = float(np.exp(base_ln))
 
     kontribusi = []
@@ -586,30 +601,30 @@ with st.expander("Keterbatasan yang perlu diketahui sebelum memakai angka ini"):
   harga sebenarnya, dalam persen, tanpa bobot ekstra untuk simpangan besar.
 
 **Hasil 5-fold cross-validation (interpolasi):**
-- R² skala ln **0,5435**, skala rupiah **0,4048**
-- RMSE **Rp542.602/m²**
-- MAPE **40,00%**
+- R² skala ln **0,5096**, skala rupiah **0,2719**
+- RMSE **Rp674.658/m²**
+- MAPE **41,43%**
 
 **Hasil spatial block cross-validation per kecamatan (ekstrapolasi):**
-- R² skala ln **0,3965**, skala rupiah **0,2020**
-- RMSE **Rp631.934/m²**
-- MAPE **48,03%**
+- R² skala ln **0,3941**, skala rupiah **0,1943**
+- RMSE **Rp634.203/m²**
+- MAPE **50,11%**
 
 **R² in-sample (model diuji pada data yang sama dipakai melatihnya):**
-- R² skala ln **0,9144**, skala rupiah **0,8342**
-- RMSE **Rp286.388/m²**
-- MAPE **16,32%**
+- R² skala ln **0,9384**, skala rupiah **0,8084**
+- RMSE **Rp346.106/m²**
+- MAPE **13,66%**
 
 **Uji IAAO, 5-fold CV (interpolasi):**
-- COD **34,35** (ambang 5-20)
-- PRD **1,2099** (ambang 0,98-1,03)
-- PRB **-0,1961** (ambang -0,05 s.d. 0,05)
+- COD **35,55** (ambang 5-20)
+- PRD **1,2602** (ambang 0,98-1,03)
+- PRB **-0,2228** (ambang -0,05 s.d. 0,05)
 - Ketiganya gagal ambang.
 
 **Uji IAAO, spatial block CV per kecamatan (ekstrapolasi):**
-- COD **38,37** (ambang 5-20)
-- PRD **1,3298** (ambang 0,98-1,03)
-- PRB **-0,4387** (ambang -0,05 s.d. 0,05)
+- COD **40,00** (ambang 5-20)
+- PRD **1,3350** (ambang 0,98-1,03)
+- PRB **-0,4167** (ambang -0,05 s.d. 0,05)
 - Ketiganya gagal ambang.
 
 **Keterbatasan lain:**
@@ -617,7 +632,7 @@ with st.expander("Keterbatasan yang perlu diketahui sebelum memakai angka ini"):
   terdekat (grid 500 meter), bukan dihitung ulang presisi untuk lokasi persis yang
   ditandai.
 - Random Forest tidak bisa diandalkan untuk memprediksi kombinasi input yang jauh di
-  luar rentang data 188 bidang yang dipakai melatihnya.
+  luar rentang data 192 bidang yang dipakai melatihnya.
 - Faktor penentu nilai di atas adalah aproksimasi SHAP yang dikonversi dari skala
   logaritmik ke rupiah untuk kemudahan baca, bukan dekomposisi rupiah yang presisi.
         """
